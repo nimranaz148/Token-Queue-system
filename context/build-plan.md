@@ -53,7 +53,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 03 Database foundation — PostgreSQL (Supabase) + Alembic; first migration; naming and key conventions from PRD §12.2; migration check in `verify.sh`
   - Acceptance: The first migration applies to an empty database and the migration check in `verify.sh` passes
   - Acceptance: Table, column and key names follow PRD §12.2
-- [ ] 04 Authentication & authorization — login/refresh/logout, roles and permission matrix from PRD §14.2, enforced in the API
+- [x] 04 Authentication & authorization — login/refresh/logout, roles and permission matrix from PRD §14.2, enforced in the API
   - Acceptance: Login, refresh and logout work; a wrong password and an expired token are rejected
   - Acceptance: A user without the role gets 403 on a protected endpoint (test per role in PRD §14.2)
 - [ ] 05 Tenancy enforcement — central scoping filter, deny-by-default, cross-tenant access tests (PRD §3.5)
@@ -114,7 +114,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 22 Database foundation and first migration [backend-api pack]
   - Acceptance: Migration applies to an empty database
   - Acceptance: the migration check passes in the fast tier
-- [ ] 23 Authentication and authorisation skeleton [backend-api pack]
+- [x] 23 Authentication and authorisation skeleton [backend-api pack]
   - Acceptance: Login works
   - Acceptance: a role without access gets 403
   - Acceptance: one test per role

@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     port: int = 8000
     supabase_url: str = ""
     supabase_jwt_secret: str = ""
+    jwt_secret_key: str = "dev-secret-key-change-in-production-only-32bytes-minimum"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 60 * 24
+    jwt_refresh_token_expire_minutes: int = 60 * 24 * 7
     openrouter_api_key: str = ""
     gemini_api_key: str = ""
 

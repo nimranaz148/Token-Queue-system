@@ -7,3 +7,4 @@ Append-only history. Never edit or delete a line. The short status lives in `pro
 2026-10-31 — Task 01 done: Repo scaffold (apps/api, apps/web, packages/api-client, infra, .env.example) and verification fast tier passed.
 2026-10-31 — Task 02 done: CI/CD workflows (.github/workflows/*) verified per lane with verify.sh, security scan, and dependabot.
 2026-10-31 — Task 03 done: PostgreSQL database foundation with 19 domain models (PRD §12.2-§12.3), Alembic migration 0001, and unit tests passing.
+2026-10-31 — Task 04 done: Authentication & authorization skeleton, JWT security, RFC 7807 problem details, PRD §14.2 role matrix enforcement, and fast-tier verification passed.

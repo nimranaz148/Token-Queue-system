@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 03 Database foundation
-**In progress:** 04 Authentication & authorization
-**Next:** 05 Tenancy enforcement
+**Last completed:** 04 Authentication & authorization
+**In progress:** 05 Tenancy enforcement
+**Next:** 06 Audit infrastructure
 **Blockers:** None
 
 ---
@@ -20,7 +20,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 01 Repo scaffold
 - [x] 02 CI/CD + verification
 - [x] 03 Database foundation
-- [ ] 04 Authentication & authorization
+- [x] 04 Authentication & authorization
 - [ ] 05 Tenancy enforcement
 - [ ] 06 Audit infrastructure
 - [ ] 07 API conventions + contract
@@ -39,7 +39,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [ ] 20 Deploy a preview environment on a free tier [web-app pack]
 - [ ] 21 Scaffold the API with lint, format, typecheck and a health endpoin…
 - [x] 22 Database foundation and first migration [backend-api pack]
-- [ ] 23 Authentication and authorisation skeleton [backend-api pack]
+- [x] 23 Authentication and authorisation skeleton [backend-api pack]
 - [ ] 24 OpenAPI contract and generated client with a drift check [backend-…
 - [ ] 25 Tool catalogue with schemas, permissions and a test per tool [agen…
 - [ ] 26 Evaluation harness with a first golden set [agents pack]
