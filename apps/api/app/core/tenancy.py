@@ -12,6 +12,7 @@ from sqlalchemy.orm import ORMExecuteState, Session, with_loader_criteria
 from app.core.database import get_db
 from app.core.errors import forbidden
 from app.core.permissions import get_current_user
+from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.clinic import Clinic
 from app.schemas.auth import CurrentUser
@@ -130,6 +131,17 @@ def _enforce_tenant_on_flush(session: Session, flush_context: Any, instances: An
     # 1. Enforce on newly added instances
     for obj in session.new:
         if hasattr(obj, "clinic_id") and obj.__class__ is not Clinic:
+            if obj.__class__ is AuditLog:
+                if clinic_id is not None:
+                    if obj.clinic_id is None:
+                        obj.clinic_id = clinic_id
+                    elif obj.clinic_id != clinic_id:
+                        raise forbidden(
+                            code="CROSS_TENANT_ACCESS",
+                            detail="Cannot persist AuditLog for a different clinic",
+                        )
+                continue
+
             if clinic_id is None:
                 raise forbidden(
                     code="TENANT_REQUIRED",

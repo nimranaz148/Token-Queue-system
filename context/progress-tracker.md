@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 05 Tenancy enforcement
-**In progress:** 06 Audit infrastructure
-**Next:** 07 API conventions + contract
+**Last completed:** 06 Audit infrastructure
+**In progress:** 07 API conventions + contract
+**Next:** 08 UI foundation
 **Blockers:** None
 
 ---
@@ -22,7 +22,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 03 Database foundation
 - [x] 04 Authentication & authorization
 - [x] 05 Tenancy enforcement
-- [ ] 06 Audit infrastructure
+- [x] 06 Audit infrastructure
 - [ ] 07 API conventions + contract
 - [ ] 08 UI foundation
 - [ ] 09 Agent service skeleton

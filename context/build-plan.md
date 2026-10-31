@@ -59,7 +59,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 05 Tenancy enforcement — central scoping filter, deny-by-default, cross-tenant access tests (PRD §3.5)
   - Acceptance: A test proves tenant A cannot read or write tenant B's rows
   - Acceptance: A request with no tenant context returns zero rows (deny by default)
-- [ ] 06 Audit infrastructure — audit rows for the actions in PRD §14.1, sensitive-field masking, test that each audited action writes a row
+- [x] 06 Audit infrastructure — audit rows for the actions in PRD §14.1, sensitive-field masking, test that each audited action writes a row
   - Acceptance: Each audited action in PRD §14.1 writes exactly one audit row (one test per action)
   - Acceptance: Sensitive fields are masked in the stored row
 - [ ] 07 API conventions + contract — versioned base path, error format, OpenAPI, generated client (openapi), drift check in `verify.sh`
