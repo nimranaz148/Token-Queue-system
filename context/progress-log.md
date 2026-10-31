@@ -12,3 +12,4 @@ Append-only history. Never edit or delete a line. The short status lives in `pro
 2026-10-31 — Task 06 done: Immutable audit infrastructure, masking for sensitive personal/health data and IP hashing, covering all 29 PRD §14.1 audited actions with passing unit tests.
 2026-10-31 — Task 07 done: API conventions enforced (/api/v1 versioned prefix, RFC 7807 problem details), OpenAPI client regenerated, and contract drift check passed.
 2026-10-31 — Task 08 done: UI foundation, design tokens, FormShell mandated layout, DataGrid 4-state table, LayoutShell, and ui-registry updated.
+2026-10-31 — Task 09 done: Agent service skeleton in apps/api/app/ai, zero DB credentials, tool catalog wired to domain services with caller identity and tenant scoping, provider fallback, and passing architecture/unit tests.

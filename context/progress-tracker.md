@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 08 UI foundation
-**In progress:** 09 Agent service skeleton
-**Next:** 10 Vertical slice
+**Last completed:** 09 Agent service skeleton
+**In progress:** 10 Vertical slice
+**Next:** 11 Staff Login
 **Blockers:** None
 
 ---
@@ -25,7 +25,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 06 Audit infrastructure
 - [x] 07 API conventions + contract
 - [x] 08 UI foundation
-- [ ] 09 Agent service skeleton
+- [x] 09 Agent service skeleton
 - [ ] 10 Vertical slice
 - [ ] 11 Staff Login
 - [ ] 12 New Clinic (onboarding)
@@ -41,7 +41,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 22 Database foundation and first migration [backend-api pack]
 - [x] 23 Authentication and authorisation skeleton [backend-api pack]
 - [x] 24 OpenAPI contract and generated client with a drift check [backend-…
-- [ ] 25 Tool catalogue with schemas, permissions and a test per tool [agen…
+- [x] 25 Tool catalogue with schemas, permissions and a test per tool [agen…
 - [ ] 26 Evaluation harness with a first golden set [agents pack]
 - [ ] 27 Vendor accounts, sandbox access and credentials in the secret mana…
 - [ ] 28 Integration skill: install an upstream one or generate a project-l…

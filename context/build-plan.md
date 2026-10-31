@@ -68,7 +68,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 08 UI foundation — design tokens, layout shell, the mandated form layout (PRD §5.1), reusable grid/form/status components, `context/ui-registry.md` started
   - Acceptance: Design tokens are the only source of colour, type and spacing; a lint or grep check finds no hard-coded values
   - Acceptance: The layout shell renders at mobile and desktop widths without horizontal scroll
-- [ ] 09 Agent service skeleton — separate service, no database credentials, tool catalog wired to the API with the caller's identity (PRD §36.2-36.4)
+- [x] 09 Agent service skeleton — separate service, no database credentials, tool catalog wired to the API with the caller's identity (PRD §36.2-36.4)
   - Acceptance: The agent service has no database credentials in its environment
   - Acceptance: A tool call reaches the API with the caller's identity, and a forbidden call is rejected
 - [ ] 10 Vertical slice — the smallest end-to-end feature across every layer, to prove the pattern later tasks copy
@@ -120,7 +120,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
   - Acceptance: one test per role
 - [x] 24 OpenAPI contract and generated client with a drift check [backend-api pack]
   - Acceptance: The drift check fails when an endpoint changes without regeneration
-- [ ] 25 Tool catalogue with schemas, permissions and a test per tool [agents pack]
+- [x] 25 Tool catalogue with schemas, permissions and a test per tool [agents pack]
   - Acceptance: A forbidden call is rejected
   - Acceptance: each tool has a unit test
 - [ ] 26 Evaluation harness with a first golden set [agents pack]

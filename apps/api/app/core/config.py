@@ -18,7 +18,12 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 60 * 24
     jwt_refresh_token_expire_minutes: int = 60 * 24 * 7
     openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openrouter_default_model: str = "openai/gpt-4o-mini"
     gemini_api_key: str = ""
+    gemini_default_model: str = "gemini-1.5-flash"
+    ai_clinic_monthly_cap_usd: float = 2.0
+    ai_global_monthly_cap_usd: float = 50.0
 
 
 settings = Settings()
