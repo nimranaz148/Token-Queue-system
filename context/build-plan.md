@@ -41,10 +41,10 @@ A task must be verifiable in one fast-tier cycle (`bash scripts/verify.sh`, seco
 
 Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds a reception user; a second clinic's owner gets 404 on the first clinic's data; CI green
 
-- [ ] 00 Architecture Decision Record + sign-off — write `docs/adr/0001-stack-decision.md` from PRD §3.1 (stack, why, rejected alternatives)
+- [x] 00 Architecture Decision Record + sign-off — write `docs/adr/0001-stack-decision.md` from PRD §3.1 (stack, why, rejected alternatives)
   - Acceptance: `docs/adr/0001-stack-decision.md` exists and names the stack, the reasons and the rejected alternatives
   - Acceptance: The developer has signed it off (recorded in the progress log)
-- [ ] 01 Repo scaffold — folders per PRD §3.4 (`apps/api`, `apps/web`, `apps/api/app/ai`, `infra`, `packages/api-client`), package managers, `.env.example` with empty values
+- [x] 01 Repo scaffold — folders per PRD §3.4 (`apps/api`, `apps/web`, `apps/api/app/ai`, `infra`, `packages/api-client`), package managers, `.env.example` with empty values
   - Acceptance: Every folder in PRD §3.4 exists and each part builds or runs an empty smoke test
   - Acceptance: `.env.example` lists every variable with an empty value; no real secret is committed
 - [ ] 02 CI/CD + verification — one workflow per lane (api, web, agents, infra, client) calling `scripts/verify.sh`; secret scan; dependency scan
