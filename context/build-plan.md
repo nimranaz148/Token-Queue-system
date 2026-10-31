@@ -62,7 +62,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 06 Audit infrastructure — audit rows for the actions in PRD §14.1, sensitive-field masking, test that each audited action writes a row
   - Acceptance: Each audited action in PRD §14.1 writes exactly one audit row (one test per action)
   - Acceptance: Sensitive fields are masked in the stored row
-- [ ] 07 API conventions + contract — versioned base path, error format, OpenAPI, generated client (openapi), drift check in `verify.sh`
+- [x] 07 API conventions + contract — versioned base path, error format, OpenAPI, generated client (openapi), drift check in `verify.sh`
   - Acceptance: The generated client matches the live OpenAPI document; the drift check passes
   - Acceptance: Errors use the documented error format
 - [ ] 08 UI foundation — design tokens, layout shell, the mandated form layout (PRD §5.1), reusable grid/form/status components, `context/ui-registry.md` started
@@ -118,7 +118,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
   - Acceptance: Login works
   - Acceptance: a role without access gets 403
   - Acceptance: one test per role
-- [ ] 24 OpenAPI contract and generated client with a drift check [backend-api pack]
+- [x] 24 OpenAPI contract and generated client with a drift check [backend-api pack]
   - Acceptance: The drift check fails when an endpoint changes without regeneration
 - [ ] 25 Tool catalogue with schemas, permissions and a test per tool [agents pack]
   - Acceptance: A forbidden call is rejected
