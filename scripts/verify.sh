@@ -232,11 +232,12 @@ contract_check() {
   trap 'contract_stop_port '"$port"'; kill $pid 2>/dev/null || true' RETURN
   local ok=0
   for _ in $(seq 1 60); do
-    if curl -sf "http://localhost:$port/api/v1/health" > /dev/null; then ok=1; break; fi
-    sleep 2
+    if curl -sf "http://127.0.0.1:$port/api/v1/health" > /dev/null; then ok=1; break; fi
+    sleep 1
   done
   if [ "$ok" != 1 ]; then echo "API did not start:"; tail -40 "$log"; return 1; fi
-  ( cd packages/api-client && SPEC_URL="http://localhost:$port/openapi.json" npx openapi-typescript $SPEC_URL -o src/generated/schema.ts )
+  local spec_url="http://127.0.0.1:$port/openapi.json"
+  ( cd packages/api-client && npx openapi-typescript "$spec_url" -o src/generated/schema.ts )
   if ! git diff --exit-code -- packages/api-client/src/generated/schema.ts; then
     echo "packages/api-client was stale and has been REGENERATED — review and commit the diff above."
     return 1

@@ -39,7 +39,9 @@ select = [
     "UP",  # pyupgrade
     "S608", # check for SQL injection
 ]
-ignore = []
+ignore = [
+    "E501",  # line length is handled by ruff format
+]
 
 [tool.mypy]
 python_version = "3.12"
