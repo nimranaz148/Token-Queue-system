@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 07 API conventions + contract
-**In progress:** 08 UI foundation
-**Next:** 09 Agent service skeleton
+**Last completed:** 08 UI foundation
+**In progress:** 09 Agent service skeleton
+**Next:** 10 Vertical slice
 **Blockers:** None
 
 ---
@@ -24,7 +24,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 05 Tenancy enforcement
 - [x] 06 Audit infrastructure
 - [x] 07 API conventions + contract
-- [ ] 08 UI foundation
+- [x] 08 UI foundation
 - [ ] 09 Agent service skeleton
 - [ ] 10 Vertical slice
 - [ ] 11 Staff Login
@@ -34,7 +34,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [ ] 15 Integration: Supabase Auth (email magic link; custom SMTP: Gmail a…
 - [ ] 16 Integration: Sentry
 - [ ] 17 Scaffold the web app with the chosen framework, strict TypeScript,…
-- [ ] 18 Design tokens and layout shell [web-app pack]
+- [x] 18 Design tokens and layout shell [web-app pack]
 - [ ] 19 Authentication and role guard [web-app pack]
 - [ ] 20 Deploy a preview environment on a free tier [web-app pack]
 - [ ] 21 Scaffold the API with lint, format, typecheck and a health endpoin…

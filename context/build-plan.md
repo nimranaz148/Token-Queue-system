@@ -65,7 +65,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 07 API conventions + contract — versioned base path, error format, OpenAPI, generated client (openapi), drift check in `verify.sh`
   - Acceptance: The generated client matches the live OpenAPI document; the drift check passes
   - Acceptance: Errors use the documented error format
-- [ ] 08 UI foundation — design tokens, layout shell, the mandated form layout (PRD §5.1), reusable grid/form/status components, `context/ui-registry.md` started
+- [x] 08 UI foundation — design tokens, layout shell, the mandated form layout (PRD §5.1), reusable grid/form/status components, `context/ui-registry.md` started
   - Acceptance: Design tokens are the only source of colour, type and spacing; a lint or grep check finds no hard-coded values
   - Acceptance: The layout shell renders at mobile and desktop widths without horizontal scroll
 - [ ] 09 Agent service skeleton — separate service, no database credentials, tool catalog wired to the API with the caller's identity (PRD §36.2-36.4)
@@ -99,7 +99,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [ ] 17 Scaffold the web app with the chosen framework, strict TypeScript, lint and format [web-app pack]
   - Acceptance: Fresh clone installs and builds
   - Acceptance: lint and typecheck run in the fast tier
-- [ ] 18 Design tokens and layout shell [web-app pack]
+- [x] 18 Design tokens and layout shell [web-app pack]
   - Acceptance: Tokens are the only source of colour, type and spacing
   - Acceptance: shell renders at 360 px and 1440 px without horizontal scroll
 - [ ] 19 Authentication and role guard [web-app pack]
