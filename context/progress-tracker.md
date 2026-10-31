@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 01 Repo scaffold
-**In progress:** 02 CI/CD + verification
-**Next:** 03 Database foundation
+**Last completed:** 02 CI/CD + verification
+**In progress:** 03 Database foundation
+**Next:** 04 Authentication & authorization
 **Blockers:** None
 
 ---
@@ -18,7 +18,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 - [x] 00 Architecture Decision Record + sign-off
 - [x] 01 Repo scaffold
-- [ ] 02 CI/CD + verification
+- [x] 02 CI/CD + verification
 - [ ] 03 Database foundation
 - [ ] 04 Authentication & authorization
 - [ ] 05 Tenancy enforcement

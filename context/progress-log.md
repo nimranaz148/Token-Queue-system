@@ -5,3 +5,4 @@ Append-only history. Never edit or delete a line. The short status lives in `pro
 <!-- one line per event: YYYY-MM-DD — task NN done | decision | ruling — what and why -->
 2026-10-31 — Task 00 done: Architecture Decision Record (docs/adr/0001-stack-decision.md) signed off per PRD §3.1.
 2026-10-31 — Task 01 done: Repo scaffold (apps/api, apps/web, packages/api-client, infra, .env.example) and verification fast tier passed.
+2026-10-31 — Task 02 done: CI/CD workflows (.github/workflows/*) verified per lane with verify.sh, security scan, and dependabot.

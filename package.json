@@ -12,5 +12,12 @@
     "lint:web": "npm run lint --workspace=apps/web",
     "typecheck:web": "npm run typecheck --workspace=apps/web",
     "test:web": "npm run test --workspace=apps/web"
+  },
+  "overrides": {
+    "postcss": "^8.5.32",
+    "tinypool": "^2.2.0",
+    "next": {
+      "postcss": "^8.5.32"
+    }
   }
 }

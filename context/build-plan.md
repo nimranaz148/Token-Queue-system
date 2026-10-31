@@ -47,7 +47,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 01 Repo scaffold — folders per PRD §3.4 (`apps/api`, `apps/web`, `apps/api/app/ai`, `infra`, `packages/api-client`), package managers, `.env.example` with empty values
   - Acceptance: Every folder in PRD §3.4 exists and each part builds or runs an empty smoke test
   - Acceptance: `.env.example` lists every variable with an empty value; no real secret is committed
-- [ ] 02 CI/CD + verification — one workflow per lane (api, web, agents, infra, client) calling `scripts/verify.sh`; secret scan; dependency scan
+- [x] 02 CI/CD + verification — one workflow per lane (api, web, agents, infra, client) calling `scripts/verify.sh`; secret scan; dependency scan
   - Acceptance: Every lane has a workflow that calls `scripts/verify.sh`; a deliberately broken commit turns CI red
   - Acceptance: Secret scan and dependency scan run and pass on the clean tree
 - [ ] 03 Database foundation — PostgreSQL (Supabase) + Alembic; first migration; naming and key conventions from PRD §12.2; migration check in `verify.sh`
