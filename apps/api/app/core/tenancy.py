@@ -97,6 +97,8 @@ def _apply_tenant_query_scope(orm_execute_state: ORMExecuteState) -> None:
         if is_scope_bypassed():
             return
 
+        orm_execute_state.update_execution_options(compiled_cache=None)
+
         clinic_id = get_current_tenant_id()
 
         def _criteria(cls: type[Any]) -> Any:

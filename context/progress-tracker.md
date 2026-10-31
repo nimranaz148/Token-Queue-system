@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 09 Agent service skeleton
-**In progress:** 10 Vertical slice
-**Next:** 11 Staff Login
+**Last completed:** 10 Vertical slice
+**In progress:** 11 Staff Login
+**Next:** 12 New Clinic (onboarding)
 **Blockers:** None
 
 ---
@@ -26,7 +26,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 07 API conventions + contract
 - [x] 08 UI foundation
 - [x] 09 Agent service skeleton
-- [ ] 10 Vertical slice
+- [x] 10 Vertical slice
 - [ ] 11 Staff Login
 - [ ] 12 New Clinic (onboarding)
 - [ ] 13 Clinics List

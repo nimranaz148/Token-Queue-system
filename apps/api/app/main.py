@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import tenancy as _tenancy  # noqa: F401
 from app.core.errors import AppException, app_exception_handler
+from app.routers.admin_clinics import router as admin_clinics_router
 from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
 
@@ -27,6 +28,7 @@ app.add_middleware(
 
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(admin_clinics_router, prefix="/api/v1")
 
 
 @app.get("/")

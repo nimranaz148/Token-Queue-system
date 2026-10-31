@@ -71,7 +71,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 09 Agent service skeleton — separate service, no database credentials, tool catalog wired to the API with the caller's identity (PRD §36.2-36.4)
   - Acceptance: The agent service has no database credentials in its environment
   - Acceptance: A tool call reaches the API with the caller's identity, and a forbidden call is rejected
-- [ ] 10 Vertical slice — the smallest end-to-end feature across every layer, to prove the pattern later tasks copy
+- [x] 10 Vertical slice — the smallest end-to-end feature across every layer, to prove the pattern later tasks copy
   - Acceptance: The smallest feature works end to end across every layer with one automated test
   - Acceptance: `scripts/verify.sh` passes and the pattern is written down for later tasks to copy
 - [ ] 11 Staff Login — F-012 (Staff; transaction; P0; roles: all staff)
