@@ -1,0 +1,30 @@
+# Secrets
+.env
+.env.*
+!.env.example
+secrets/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Downloaded harness source (not part of the product)
+_downloads/

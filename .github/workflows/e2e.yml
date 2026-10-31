@@ -1,0 +1,120 @@
+name: e2e
+
+# Full-stack Playwright run. Slow, and only catches whole-stack bugs, so it is OFF the
+# default PR path. It runs:
+#   - on PRs labelled `run-e2e` (use it for auth / session / API startup / BFF work)
+#   - on every push to main (gate any image publish on this job)
+#   - nightly and on manual dispatch
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    # `labeled` so adding `run-e2e` to an open PR starts the job.
+    types: [opened, synchronize, reopened, labeled]
+  schedule:
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-tests:
+    name: E2E tests (Playwright, full stack)
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'pull_request'
+      || contains(github.event.pull_request.labels.*.name, 'run-e2e')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+
+      - name: Prepare CI-only env files (placeholder values, never real secrets)
+        run: |
+          cp infra/.env.example infra/.env
+          cp apps/api/.env.example apps/api/.env
+          cp apps/web/.env.example apps/web/.env.local
+
+      - name: Build and start the stack
+        working-directory: infra
+        run: docker compose up -d --build
+
+      - name: Wait for the stack to become healthy
+        run: |
+          set -euo pipefail
+          for url in http://localhost:8000/api/v1/health http://localhost:3000; do
+            ok=0
+            for _ in $(seq 1 30); do
+              if curl -sf "$url" > /dev/null; then ok=1; break; fi
+              sleep 2
+            done
+            if [ "$ok" != 1 ]; then echo "::error::$url did not become healthy in time."; exit 1; fi
+          done
+
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: apps/web
+        run: npx playwright install-deps chromium
+
+      - name: Run Playwright
+        working-directory: apps/web
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          CI: "true"
+        run: npm run test:e2e
+
+      - name: Show container logs on failure
+        if: failure()
+        working-directory: infra
+        run: docker compose logs
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 14
+
+      - name: Tear down
+        if: always()
+        working-directory: infra
+        run: docker compose down -v
+
+  # A red nightly run has no PR to show up on — open (or update) an issue so it is not missed.
+  e2e-nightly-alert:
+    name: Report nightly E2E failure
+    runs-on: ubuntu-latest
+    needs: [e2e-tests]
+    if: failure() && github.event_name == 'schedule'
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TITLE="Nightly E2E failing"
+          EXISTING=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Still failing: $RUN_URL"
+          else
+            gh issue create --title "$TITLE" --body "The nightly Playwright run against the full stack failed: $RUN_URL"
+          fi

@@ -1,0 +1,33 @@
+{
+  "id": "integrations",
+  "title": "Third-party integrations (Salesforce, OAuth providers, payments, marketplaces, email)",
+  "detect": {
+    "features": [],
+    "project_types": [
+      "integration"
+    ],
+    "stack": [
+      "salesforce",
+      "oauth",
+      "upwork",
+      "stripe",
+      "hubspot",
+      "zapier",
+      "webhook"
+    ]
+  },
+  "skills": [
+    "integration-<vendor>",
+    "auth-<provider>",
+    "payments-stripe"
+  ],
+  "lanes": [
+    "contract"
+  ],
+  "docs_to_verify": [
+    "https://datatracker.ietf.org/doc/html/rfc6749",
+    "https://owasp.org/www-project-api-security/"
+  ],
+  "verified": false,
+  "_note": "verified=false: content written from engineering practice; before relying on version-specific details, check docs_to_verify against current official documentation, then set verified to the date checked."
+}

@@ -1,0 +1,49 @@
+{
+  "id": "backend-api",
+  "title": "Backend API (framework-agnostic)",
+  "detect": {
+    "features": [
+      "api-contract",
+      "database"
+    ],
+    "project_types": [
+      "api",
+      "backend",
+      "saas",
+      "erp"
+    ],
+    "stack": [
+      "fastapi",
+      "django",
+      "express",
+      "nest",
+      "asp.net",
+      ".net",
+      "spring",
+      "go",
+      "gin"
+    ]
+  },
+  "skills": [
+    "fastapi",
+    "dotnet-api",
+    "node-api",
+    "postgres",
+    "sqlalchemy-alembic",
+    "efcore",
+    "pytest",
+    "engineering-principles"
+  ],
+  "lanes": [
+    "api",
+    "api-db",
+    "contract"
+  ],
+  "docs_to_verify": [
+    "https://owasp.org/www-project-api-security/",
+    "https://www.openapis.org/",
+    "https://www.postgresql.org/docs/current/"
+  ],
+  "verified": false,
+  "_note": "verified=false: content written from engineering practice; before relying on version-specific details, check docs_to_verify against current official documentation, then set verified to the date checked."
+}

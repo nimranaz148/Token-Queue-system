@@ -1,0 +1,44 @@
+{
+  "id": "marketing-3d-site",
+  "title": "Marketing site, cinematic and 3D-forward",
+  "detect": {
+    "features": [],
+    "project_types": [
+      "marketing-site",
+      "brand-site",
+      "landing-page",
+      "portfolio"
+    ],
+    "stack": [
+      "gsap",
+      "three"
+    ]
+  },
+  "skills": [
+    "ui-core",
+    "anti-slop",
+    "gsap",
+    "scrolltrigger",
+    "cinematic-scroll",
+    "three-3d",
+    "typography",
+    "color",
+    "nextjs",
+    "tailwind",
+    "seo",
+    "performance",
+    "accessibility"
+  ],
+  "lanes": [
+    "web"
+  ],
+  "docs_to_verify": [
+    "https://gsap.com/docs/v3/",
+    "https://gsap.com/showcase/",
+    "https://threejs.org/docs/",
+    "https://web.dev/articles/vitals",
+    "https://nextjs.org/docs"
+  ],
+  "verified": false,
+  "_note": "verified=false: content written from engineering practice; before relying on version-specific details, check docs_to_verify against current official documentation, then set verified to the date checked."
+}

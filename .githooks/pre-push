@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Backstop for commits that did not go through an agent session: runs the
+# lanes affected by this branch before anything reaches CI.
+# Enable once per clone:  bash scripts/install-hooks.sh
+# Bypass in an emergency: git push --no-verify
+exec bash "$(git rev-parse --show-toplevel)/scripts/verify.sh"

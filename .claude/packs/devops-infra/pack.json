@@ -1,0 +1,35 @@
+{
+  "id": "devops-infra",
+  "title": "DevOps and infrastructure",
+  "detect": {
+    "features": [],
+    "project_types": [
+      "devops",
+      "infra"
+    ],
+    "stack": [
+      "docker",
+      "kubernetes",
+      "terraform",
+      "github actions",
+      "aws",
+      "azure",
+      "gcp"
+    ]
+  },
+  "skills": [
+    "docker",
+    "ci-github-actions",
+    "iac"
+  ],
+  "lanes": [
+    "infra"
+  ],
+  "docs_to_verify": [
+    "https://docs.github.com/actions",
+    "https://docs.docker.com/",
+    "https://owasp.org/www-project-devsecops-guideline/"
+  ],
+  "verified": false,
+  "_note": "verified=false: content written from engineering practice; before relying on version-specific details, check docs_to_verify against current official documentation, then set verified to the date checked."
+}

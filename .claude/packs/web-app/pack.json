@@ -1,0 +1,41 @@
+{
+  "id": "web-app",
+  "title": "Web application",
+  "detect": {
+    "features": [
+      "ui"
+    ],
+    "project_types": [
+      "web-app",
+      "saas",
+      "admin",
+      "dashboard"
+    ],
+    "stack": [
+      "next",
+      "react",
+      "vue",
+      "svelte",
+      "angular"
+    ]
+  },
+  "skills": [
+    "ui-core",
+    "nextjs",
+    "tailwind",
+    "react-patterns",
+    "accessibility",
+    "performance"
+  ],
+  "lanes": [
+    "web"
+  ],
+  "docs_to_verify": [
+    "https://nextjs.org/docs",
+    "https://www.w3.org/WAI/WCAG22/quickref/",
+    "https://owasp.org/www-project-top-ten/",
+    "https://web.dev/articles/vitals"
+  ],
+  "verified": false,
+  "_note": "verified=false: content written from engineering practice; before relying on version-specific details, check docs_to_verify against current official documentation, then set verified to the date checked."
+}

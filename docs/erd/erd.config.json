@@ -1,0 +1,16 @@
+{
+  "psql": ["docker", "compose", "exec", "-T", "db", "psql", "-U", "postgres", "-d", "clinic"],
+  "cwd": "infra",
+  "diagrams": [
+    { "name": "Organization", "output": "organization.md", "template": "organization.template.md",
+      "tables": { "Organization": ["clinics", "clinic_settings", "doctors", "doctor_schedules"] } },
+    { "name": "Security", "output": "security.md", "template": "security.template.md",
+      "tables": { "Security": ["clinic_members", "platform_admins", "display_devices", "audit_logs"] } },
+    { "name": "Patients", "output": "patients.md", "template": "patients.template.md",
+      "tables": { "Patients": ["patients", "visits", "visit_attachments"] } },
+    { "name": "Queue", "output": "queue.md", "template": "queue.template.md",
+      "tables": { "Queue": ["tokens", "token_counters", "token_events", "daily_stats"] } },
+    { "name": "AI", "output": "ai.md", "template": "ai.template.md",
+      "tables": { "AI": ["ai_runs", "ai_briefs", "chat_messages", "wait_predictions"] } }
+  ]
+}
