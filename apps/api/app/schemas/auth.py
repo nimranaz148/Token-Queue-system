@@ -13,8 +13,12 @@ class Role(StrEnum):
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str | None = Field(default=None, description="Password for email/password or dev auth")
-    clinic_id: uuid.UUID | None = Field(default=None, description="Clinic ID if member belongs to multiple clinics")
+    password: str | None = Field(
+        default=None, description="Password for email/password or dev auth"
+    )
+    clinic_id: uuid.UUID | None = Field(
+        default=None, description="Clinic ID if member belongs to multiple clinics"
+    )
 
 
 class TokenResponse(BaseModel):

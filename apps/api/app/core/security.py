@@ -52,12 +52,14 @@ def create_access_token(
     else:
         expire = now + timedelta(minutes=settings.jwt_access_token_expire_minutes)
 
-    to_encode.update({
-        "exp": expire,
-        "iat": now,
-        "nbf": now,
-        "type": "access",
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now,
+            "nbf": now,
+            "type": "access",
+        }
+    )
     return jwt.encode(to_encode, get_jwt_secret(), algorithm=settings.jwt_algorithm)
 
 
@@ -72,13 +74,15 @@ def create_refresh_token(
     else:
         expire = now + timedelta(minutes=settings.jwt_refresh_token_expire_minutes)
 
-    to_encode.update({
-        "exp": expire,
-        "iat": now,
-        "nbf": now,
-        "jti": str(uuid.uuid4()),
-        "type": "refresh",
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now,
+            "nbf": now,
+            "jti": str(uuid.uuid4()),
+            "type": "refresh",
+        }
+    )
     return jwt.encode(to_encode, get_jwt_secret(), algorithm=settings.jwt_algorithm)
 
 

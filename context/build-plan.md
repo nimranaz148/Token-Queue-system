@@ -56,7 +56,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 04 Authentication & authorization — login/refresh/logout, roles and permission matrix from PRD §14.2, enforced in the API
   - Acceptance: Login, refresh and logout work; a wrong password and an expired token are rejected
   - Acceptance: A user without the role gets 403 on a protected endpoint (test per role in PRD §14.2)
-- [ ] 05 Tenancy enforcement — central scoping filter, deny-by-default, cross-tenant access tests (PRD §3.5)
+- [x] 05 Tenancy enforcement — central scoping filter, deny-by-default, cross-tenant access tests (PRD §3.5)
   - Acceptance: A test proves tenant A cannot read or write tenant B's rows
   - Acceptance: A request with no tenant context returns zero rows (deny by default)
 - [ ] 06 Audit infrastructure — audit rows for the actions in PRD §14.1, sensitive-field masking, test that each audited action writes a row

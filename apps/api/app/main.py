@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core import tenancy as _tenancy  # noqa: F401
 from app.core.errors import AppException, app_exception_handler
 from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
@@ -11,6 +12,8 @@ app = FastAPI(
     docs_url="/docs",
     openapi_url="/openapi.json",
 )
+
+__all__ = ["app"]
 
 app.add_exception_handler(AppException, app_exception_handler)
 
