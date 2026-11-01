@@ -14,6 +14,8 @@ from app.schemas.token import (
     ReceptionTokenListItem,
     ReceptionTokenListResponse,
     TokenCancelStaffRequest,
+    WalkInTokenCreateRequest,
+    WalkInTokenResponse,
 )
 from app.services.token import TokenService
 
@@ -57,6 +59,32 @@ async def list_tokens(
         items=items,
         total=total,
         date=effective_date,
+    )
+
+
+@router.post("", response_model=WalkInTokenResponse, status_code=status.HTTP_201_CREATED)
+async def create_walk_in_token(
+    payload: WalkInTokenCreateRequest,
+    request: Request,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> WalkInTokenResponse:
+    """Issue a walk-in token at reception (PRD §5.3 F-005, W-002).
+
+    Permissions: reception, owner.
+    """
+    client_ip = request.client.host if request.client else None
+    request_id = getattr(request.state, "request_id", None)
+    if not current_user.clinic_id:
+        raise forbidden(code="CLINIC_REQUIRED", detail="User does not have an active clinic association.")
+    service = TokenService(session)
+
+    return await service.create_walk_in_token(
+        clinic_id=current_user.clinic_id,
+        payload=payload,
+        current_user=current_user,
+        client_ip=client_ip,
+        request_id=request_id,
     )
 
 

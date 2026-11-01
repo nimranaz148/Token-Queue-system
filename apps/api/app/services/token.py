@@ -31,6 +31,8 @@ from app.schemas.token import (
     TokenBookingResponse,
     TokenCancelResponse,
     TokenDetailsResponse,
+    WalkInTokenCreateRequest,
+    WalkInTokenResponse,
 )
 from app.services.audit import AuditService
 
@@ -863,5 +865,219 @@ class TokenService:
             called_at=token.called_at,
             completed_at=token.completed_at,
             cancelled_reason=token.cancelled_reason,
+            created_at=token.created_at,
+        )
+
+    async def create_walk_in_token(
+        self,
+        clinic_id: uuid.UUID,
+        payload: WalkInTokenCreateRequest,
+        current_user: CurrentUser,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> WalkInTokenResponse:
+        """Create a walk-in token at reception (PRD §5.3 F-005, W-002).
+
+        Permissions: reception, owner. Non-staff raises 403 FORBIDDEN.
+        """
+        if current_user.role not in (Role.RECEPTION, Role.OWNER):
+            raise forbidden(
+                code="FORBIDDEN",
+                detail="Only reception or owner can create walk-in tokens.",
+            )
+
+        # 1. Normalize and validate phone
+        normalized_phone = normalize_phone(payload.phone)
+
+        # 2. Today's date in clinic context
+        today = date.today()
+
+        # 3. Validate Doctor belongs to clinic and is active
+        doc_stmt = select(Doctor).where(
+            Doctor.id == payload.doctor_id,
+            Doctor.clinic_id == clinic_id,
+            Doctor.active.is_(True),
+            Doctor.deleted_at.is_(None),
+        )
+        doc_res = await self.session.execute(doc_stmt)
+        doctor = doc_res.scalar_one_or_none()
+        if not doctor:
+            raise unprocessable_entity(
+                code="DOCTOR_UNAVAILABLE",
+                detail="Selected doctor is not active or not available at this clinic.",
+            )
+
+        # 4. Check doctor OPD schedule for today (weekday 0-6)
+        weekday = today.weekday()
+        sched_stmt = select(DoctorSchedule).where(
+            DoctorSchedule.doctor_id == doctor.id,
+            DoctorSchedule.weekday == weekday,
+        )
+        sched_res = await self.session.execute(sched_stmt)
+        schedule = sched_res.scalar_one_or_none()
+        if not schedule:
+            raise unprocessable_entity(
+                code="DOCTOR_NO_OPD_TODAY",
+                detail=f"{doctor.name} does not have an OPD session scheduled for today.",
+            )
+
+        # 5. Check daily online limit vs ignore_daily_limit
+        if not payload.ignore_daily_limit and doctor.daily_online_limit:
+            count_stmt = select(func.count(Token.id)).where(
+                Token.clinic_id == clinic_id,
+                Token.doctor_id == doctor.id,
+                Token.visit_date == today,
+                Token.status != "cancelled",
+            )
+            count_res = await self.session.execute(count_stmt)
+            active_tokens_count = count_res.scalar() or 0
+            if active_tokens_count >= doctor.daily_online_limit:
+                raise conflict(
+                    code="DAILY_LIMIT_REACHED",
+                    detail=f"Daily limit of {doctor.daily_online_limit} tokens reached for {doctor.name}. Tick 'ignore_daily_limit' to override.",
+                )
+
+        # 6. Patient lookup or create
+        patient: Patient | None = None
+        if payload.existing_patient_id:
+            p_stmt = select(Patient).where(
+                Patient.id == payload.existing_patient_id,
+                Patient.clinic_id == clinic_id,
+                Patient.deleted_at.is_(None),
+            )
+            p_res = await self.session.execute(p_stmt)
+            patient = p_res.scalar_one_or_none()
+
+        if not patient:
+            p_phone_stmt = select(Patient).where(
+                Patient.clinic_id == clinic_id,
+                Patient.phone == normalized_phone,
+                Patient.deleted_at.is_(None),
+            )
+            p_phone_res = await self.session.execute(p_phone_stmt)
+            patient = p_phone_res.scalar_one_or_none()
+
+        if not patient:
+            patient = Patient(
+                id=uuid.uuid4(),
+                clinic_id=clinic_id,
+                name=payload.patient_name.strip(),
+                phone=normalized_phone,
+            )
+            self.session.add(patient)
+            await self.session.flush()
+
+        # 7. Atomic row lock on TokenCounter
+        counter_stmt = (
+            select(TokenCounter)
+            .where(
+                TokenCounter.clinic_id == clinic_id,
+                TokenCounter.doctor_id == doctor.id,
+                TokenCounter.visit_date == today,
+            )
+            .with_for_update()
+        )
+        counter_res = await self.session.execute(counter_stmt)
+        counter = counter_res.scalar_one_or_none()
+
+        if not counter:
+            counter = TokenCounter(
+                clinic_id=clinic_id,
+                doctor_id=doctor.id,
+                visit_date=today,
+                last_number=0,
+            )
+            self.session.add(counter)
+            await self.session.flush()
+            counter_res = await self.session.execute(counter_stmt)
+            counter = counter_res.scalar_one_or_none() or counter
+
+        new_number = counter.last_number + 1
+        counter.last_number = new_number
+
+        # 8. Insert walk-in token with status 'arrived'
+        now = datetime.now(UTC)
+        public_code = secrets.token_urlsafe(16)
+        token = Token(
+            id=uuid.uuid4(),
+            clinic_id=clinic_id,
+            doctor_id=doctor.id,
+            patient_id=patient.id,
+            visit_date=today,
+            number=new_number,
+            position=Decimal(new_number),
+            source="walk_in",
+            status="arrived",
+            public_code=public_code,
+            arrived_at=now,
+            created_at=now,
+            updated_at=now,
+        )
+        self.session.add(token)
+        await self.session.flush()
+
+        # 9. Insert TokenEvent
+        token_event = TokenEvent(
+            token_id=token.id,
+            clinic_id=clinic_id,
+            from_status=None,
+            to_status="arrived",
+            actor_type="staff",
+            actor_id=current_user.user_id,
+        )
+        self.session.add(token_event)
+
+        # 10. Audit Log
+        AuditService.record_audit(
+            session=self.session,
+            action="token.create",
+            entity="token",
+            entity_id=token.id,
+            actor_type="staff",
+            actor_id=current_user.user_id,
+            clinic_id=clinic_id,
+            before=None,
+            after={
+                "number": token.number,
+                "source": "walk_in",
+                "status": "arrived",
+                "ignore_daily_limit": payload.ignore_daily_limit,
+                "doctor_id": str(doctor.id),
+                "patient_id": str(patient.id),
+            },
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+        await self.session.refresh(token)
+
+        # 11. Broadcast Realtime
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=clinic_id,
+                doctor_id=doctor.id,
+                event="token.created",
+                token_number=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on create_walk_in_token: %s", exc)
+
+        return WalkInTokenResponse(
+            id=token.id,
+            number=token.number,
+            public_code=token.public_code,
+            status=token.status,
+            source=token.source,
+            patient_id=patient.id,
+            patient_name=patient.name,
+            phone=patient.phone,
+            doctor_id=doctor.id,
+            doctor_name=doctor.name,
+            visit_date=token.visit_date,
+            position=token.position,
+            arrived_at=token.arrived_at or now,
             created_at=token.created_at,
         )

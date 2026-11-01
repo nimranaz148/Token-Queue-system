@@ -156,3 +156,38 @@ class TokenCancelStaffRequest(BaseModel):
     """Payload for staff cancellation of a token with required reason (PRD §5.3 F-004)."""
 
     reason: str = Field(..., min_length=2, max_length=200, description="Reason required")
+
+
+class WalkInTokenCreateRequest(BaseModel):
+    """Payload for Walk-in Entry at reception (PRD §5.3 F-005)."""
+
+    doctor_id: uuid.UUID = Field(..., description="Active doctor with OPD today")
+    patient_name: str = Field(..., min_length=2, max_length=60, description="2-60 chars")
+    phone: str = Field(..., min_length=7, max_length=50, description="E.164 phone number")
+    existing_patient_id: uuid.UUID | None = Field(
+        default=None, description="Set when picked from autocomplete"
+    )
+    ignore_daily_limit: bool = Field(
+        default=False, description="Owner/reception may exceed daily limit; audited"
+    )
+
+
+class WalkInTokenResponse(BaseModel):
+    """Response returned upon walk-in token creation (PRD §5.3 F-005)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    number: int
+    public_code: str
+    status: str
+    source: str
+    patient_id: uuid.UUID
+    patient_name: str
+    phone: str
+    doctor_id: uuid.UUID
+    doctor_name: str
+    visit_date: date
+    position: Decimal | float
+    arrived_at: datetime
+    created_at: datetime

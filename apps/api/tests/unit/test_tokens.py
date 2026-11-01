@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.core.errors import AppException
 from app.core.security import create_access_token
 from app.main import app
-from app.models.doctor import Doctor
+from app.models.doctor import Doctor, DoctorSchedule
 from app.models.patient import Patient
 from app.models.token import Token
 from app.schemas.auth import CurrentUser, Role
@@ -325,3 +325,194 @@ async def test_token_service_cancel_by_staff_rules() -> None:
     assert token.status == "cancelled"
     session.add.assert_called()
     session.commit.assert_awaited()
+
+
+def test_create_walk_in_token_permissions(mock_db: AsyncMock) -> None:
+    """Acceptance: Reception and owner can create walk-in tokens; others get 403."""
+    clinic_id = uuid.uuid4()
+    doc_id = uuid.uuid4()
+
+    payload = {
+        "doctor_id": str(doc_id),
+        "patient_name": "Hamza Ali",
+        "phone": "+923001234567",
+        "ignore_daily_limit": False,
+    }
+
+    # 1. Reception -> 201
+    with patch.object(TokenService, "create_walk_in_token", new_callable=AsyncMock) as mock_create:
+        mock_create.return_value = {
+            "id": uuid.uuid4(),
+            "number": 10,
+            "public_code": "walkin-public-code",
+            "status": "arrived",
+            "source": "walk_in",
+            "patient_id": uuid.uuid4(),
+            "patient_name": "Hamza Ali",
+            "phone": "+923001234567",
+            "doctor_id": doc_id,
+            "doctor_name": "Dr. Tariq",
+            "visit_date": date.today(),
+            "position": 10.0,
+            "arrived_at": datetime.now(UTC),
+            "created_at": datetime.now(UTC),
+        }
+        rec_headers = make_auth_headers(Role.RECEPTION, clinic_id=clinic_id)
+        res_rec = client.post("/api/v1/tokens", json=payload, headers=rec_headers)
+        assert res_rec.status_code == 201
+        assert res_rec.json()["number"] == 10
+        assert res_rec.json()["status"] == "arrived"
+        assert res_rec.json()["source"] == "walk_in"
+
+    # 2. Doctor -> 403
+    doc_headers = make_auth_headers(Role.DOCTOR, clinic_id=clinic_id, doctor_id=doc_id)
+    res_doc = client.post("/api/v1/tokens", json=payload, headers=doc_headers)
+    assert res_doc.status_code == 403
+
+    # 3. Patient / non-staff -> 403
+    unauth_headers = make_auth_headers("patient", clinic_id=clinic_id)
+    res_unauth = client.post("/api/v1/tokens", json=payload, headers=unauth_headers)
+    assert res_unauth.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_create_walk_in_token_field_validation_and_rules() -> None:
+    """Acceptance: Field spec validation for F-005 in PRD §5.3:
+
+    - patient_name (2-60 chars)
+    - phone (E.164 normalization)
+    - doctor with OPD today
+    - ignore_daily_limit enforcement
+    - result: token_number, read-only large
+    """
+    clinic_id = uuid.uuid4()
+    doc_id = uuid.uuid4()
+    session = AsyncMock()
+    session.add = MagicMock()
+    session.flush = AsyncMock()
+    session.commit = AsyncMock()
+    session.refresh = AsyncMock()
+
+    current_user = CurrentUser(
+        user_id=uuid.uuid4(),
+        email="reception@clinic.com",
+        name="Receptionist",
+        role=Role.RECEPTION,
+        clinic_id=clinic_id,
+    )
+
+    doctor = Doctor(
+        id=doc_id,
+        clinic_id=clinic_id,
+        name="Dr. Tariq",
+        active=True,
+        daily_online_limit=5,
+    )
+    today = date.today()
+    schedule = DoctorSchedule(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        doctor_id=doc_id,
+        weekday=today.weekday(),
+        start_time=datetime.strptime("09:00", "%H:%M").time(),
+        end_time=datetime.strptime("13:00", "%H:%M").time(),
+    )
+
+    service = TokenService(session)
+
+    # 1. Inactive doctor / not found -> 422 DOCTOR_UNAVAILABLE
+    mock_res_doc_none = MagicMock()
+    mock_res_doc_none.scalar_one_or_none.return_value = None
+    session.execute = AsyncMock(return_value=mock_res_doc_none)
+
+    from app.schemas.token import WalkInTokenCreateRequest
+
+    with pytest.raises(AppException) as exc_info:
+        await service.create_walk_in_token(
+            clinic_id,
+            WalkInTokenCreateRequest(
+                doctor_id=doc_id,
+                patient_name="Hamza",
+                phone="+923001234567",
+            ),
+            current_user,
+        )
+    assert exc_info.value.code == "DOCTOR_UNAVAILABLE"
+
+    # 2. Doctor has no OPD today -> 422 DOCTOR_NO_OPD_TODAY
+    mock_res_doc = MagicMock()
+    mock_res_doc.scalar_one_or_none.return_value = doctor
+    mock_res_sched_none = MagicMock()
+    mock_res_sched_none.scalar_one_or_none.return_value = None
+    session.execute = AsyncMock(side_effect=[mock_res_doc, mock_res_sched_none])
+
+    with pytest.raises(AppException) as exc_info:
+        await service.create_walk_in_token(
+            clinic_id,
+            WalkInTokenCreateRequest(
+                doctor_id=doc_id,
+                patient_name="Hamza",
+                phone="+923001234567",
+            ),
+            current_user,
+        )
+    assert exc_info.value.code == "DOCTOR_NO_OPD_TODAY"
+
+    # 3. Daily limit reached and ignore_daily_limit is False -> 409 DAILY_LIMIT_REACHED
+    mock_res_sched = MagicMock()
+    mock_res_sched.scalar_one_or_none.return_value = schedule
+    mock_res_count = MagicMock()
+    mock_res_count.scalar.return_value = 5  # limit is 5
+    session.execute = AsyncMock(side_effect=[mock_res_doc, mock_res_sched, mock_res_count])
+
+    with pytest.raises(AppException) as exc_info:
+        await service.create_walk_in_token(
+            clinic_id,
+            WalkInTokenCreateRequest(
+                doctor_id=doc_id,
+                patient_name="Hamza",
+                phone="+923001234567",
+                ignore_daily_limit=False,
+            ),
+            current_user,
+        )
+    assert exc_info.value.code == "DAILY_LIMIT_REACHED"
+
+    # 4. Successful creation with ignore_daily_limit=True (overrides limit, stores token)
+    mock_res_counter = MagicMock()
+    mock_res_counter.scalar_one_or_none.return_value = None  # creates counter starting at 1
+    mock_res_patient = MagicMock()
+    mock_res_patient.scalar_one_or_none.return_value = None  # new patient
+
+    session.execute = AsyncMock(
+        side_effect=[
+            mock_res_doc,
+            mock_res_sched,
+            mock_res_patient,
+            mock_res_counter,
+            mock_res_counter,
+        ]
+    )
+
+    with patch("app.services.token.SupabaseRealtimeClient") as mock_realtime:
+        mock_instance = AsyncMock()
+        mock_realtime.return_value = mock_instance
+        res = await service.create_walk_in_token(
+            clinic_id,
+            WalkInTokenCreateRequest(
+                doctor_id=doc_id,
+                patient_name="Hamza Usman",
+                phone="03001234567",
+                ignore_daily_limit=True,
+            ),
+            current_user,
+        )
+
+    assert res.number == 1
+    assert res.status == "arrived"
+    assert res.source == "walk_in"
+    assert res.patient_name == "Hamza Usman"
+    assert res.phone == "+923001234567"  # normalized to E.164
+    session.add.assert_called()
+    session.commit.assert_awaited()
+    mock_instance.broadcast_queue_update.assert_awaited()

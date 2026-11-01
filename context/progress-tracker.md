@@ -73,7 +73,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
 
 - [x] 50 Aaj ki List
-- [ ] 51 Walk-in Entry
+- [x] 51 Walk-in Entry
 - [ ] 52 Patient Search & Profile
 - [ ] 53 Next Patient (Doctor Panel)
 - [ ] 54 Patient History & Visit Note
