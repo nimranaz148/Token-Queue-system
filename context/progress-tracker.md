@@ -74,7 +74,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 - [x] 50 Aaj ki List
 - [x] 51 Walk-in Entry
-- [ ] 52 Patient Search & Profile
+- [x] 52 Patient Search & Profile
 - [ ] 53 Next Patient (Doctor Panel)
 - [ ] 54 Patient History & Visit Note
 - [ ] 55 TV Screen
