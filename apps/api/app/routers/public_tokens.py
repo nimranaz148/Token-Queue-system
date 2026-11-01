@@ -9,14 +9,16 @@ from app.schemas.token import (
     PublicClinicInfoResponse,
     TokenBookingRequest,
     TokenBookingResponse,
+    TokenCancelResponse,
+    TokenDetailsResponse,
 )
 from app.services.token import TokenService
 
-router = APIRouter(prefix="/public/clinics", tags=["public-tokens"])
+router = APIRouter(prefix="/public", tags=["public-tokens"])
 
 
 @router.get(
-    "/{slug}",
+    "/clinics/{slug}",
     response_model=PublicClinicInfoResponse,
     dependencies=[Depends(allow_public)],
 )
@@ -30,7 +32,7 @@ async def get_public_clinic_details(
 
 
 @router.post(
-    "/{slug}/tokens",
+    "/clinics/{slug}/tokens",
     response_model=TokenBookingResponse,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(allow_public)],
@@ -48,6 +50,42 @@ async def book_token(
     return await service.book_token(
         slug=slug,
         payload=payload,
+        client_ip=client_ip,
+        request_id=idempotency_key,
+    )
+
+
+@router.get(
+    "/tokens/{public_code}",
+    response_model=TokenDetailsResponse,
+    dependencies=[Depends(allow_public)],
+)
+async def get_token_details(
+    public_code: str,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> TokenDetailsResponse:
+    """Retrieve current token status, wait metrics, and doctor info (PRD F-002, F-003)."""
+    service = TokenService(session)
+    return await service.get_token_by_public_code(public_code=public_code)
+
+
+@router.post(
+    "/tokens/{public_code}/cancel",
+    response_model=TokenCancelResponse,
+    dependencies=[Depends(allow_public)],
+)
+async def cancel_token(
+    public_code: str,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+) -> TokenCancelResponse:
+    """Cancel a booked or arrived token (PRD F-002, W-005)."""
+    service = TokenService(session)
+    client_ip = request.client.host if request.client else None
+    return await service.cancel_token_by_public_code(
+        public_code=public_code,
+        reason="Cancelled by patient",
         client_ip=client_ip,
         request_id=idempotency_key,
     )

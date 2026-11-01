@@ -25,6 +25,8 @@ from app.schemas.token import (
     PublicDoctorSchedule,
     TokenBookingRequest,
     TokenBookingResponse,
+    TokenCancelResponse,
+    TokenDetailsResponse,
 )
 from app.services.audit import AuditService
 
@@ -364,4 +366,138 @@ class TokenService:
             position=token.position,
             estimated_at=token.estimated_at,
             created_at=token.created_at,
+        )
+
+    async def get_token_by_public_code(self, public_code: str) -> TokenDetailsResponse:
+        """Fetch token state, wait metrics, and doctor info for Token Confirm / Live Queue (F-002, F-003)."""
+        token_stmt = select(Token).where(Token.public_code == public_code)
+        token_res = await self.session.execute(token_stmt)
+        token = token_res.scalar_one_or_none()
+        if not token:
+            raise not_found(
+                code="TOKEN_NOT_FOUND",
+                detail=f"Token with public code '{public_code}' was not found.",
+            )
+
+        clinic_stmt = select(Clinic).where(Clinic.id == token.clinic_id)
+        clinic = (await self.session.execute(clinic_stmt)).scalar_one_or_none()
+
+        doc_stmt = select(Doctor).where(Doctor.id == token.doctor_id)
+        doctor = (await self.session.execute(doc_stmt)).scalar_one_or_none()
+
+        # Count people ahead (status in booked/arrived with position < token.position)
+        ahead_stmt = (
+            select(func.count())
+            .select_from(Token)
+            .where(
+                Token.clinic_id == token.clinic_id,
+                Token.doctor_id == token.doctor_id,
+                Token.visit_date == token.visit_date,
+                Token.status.in_(["booked", "arrived"]),
+                Token.position < token.position,
+            )
+        )
+        people_ahead = (await self.session.execute(ahead_stmt)).scalar() or 0
+
+        # Current serving token number
+        serving_stmt = (
+            select(Token.number)
+            .where(
+                Token.clinic_id == token.clinic_id,
+                Token.doctor_id == token.doctor_id,
+                Token.visit_date == token.visit_date,
+                Token.status == "serving",
+            )
+            .limit(1)
+        )
+        current_serving = (await self.session.execute(serving_stmt)).scalar_one_or_none()
+
+        return TokenDetailsResponse(
+            id=token.id,
+            number=token.number,
+            public_code=token.public_code,
+            status=token.status,
+            source=token.source,
+            visit_date=token.visit_date,
+            doctor_id=token.doctor_id,
+            doctor_name=doctor.name if doctor else "Doctor",
+            specialty=doctor.specialty if doctor else None,
+            clinic_id=token.clinic_id,
+            clinic_name=clinic.name if clinic else "Clinic",
+            clinic_slug=clinic.slug if clinic else "clinic",
+            position=token.position,
+            estimated_at=token.estimated_at,
+            people_ahead=people_ahead,
+            current_serving_number=current_serving,
+            cancelled_reason=token.cancelled_reason,
+            created_at=token.created_at,
+        )
+
+    async def cancel_token_by_public_code(
+        self,
+        public_code: str,
+        reason: str = "Cancelled by patient",
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> TokenCancelResponse:
+        """Cancel an issued token from Token Confirm view (W-005, PRD §5.3 F-002).
+
+        Rules:
+        - Only tokens in 'booked' or 'arrived' status can be cancelled.
+        - Number is not reused.
+        - Writes token_events and audit row.
+        """
+        token_stmt = select(Token).where(Token.public_code == public_code)
+        token_res = await self.session.execute(token_stmt)
+        token = token_res.scalar_one_or_none()
+        if not token:
+            raise not_found(
+                code="TOKEN_NOT_FOUND",
+                detail=f"Token with public code '{public_code}' was not found.",
+            )
+
+        if token.status not in {"booked", "arrived"}:
+            raise conflict(
+                code="CANNOT_CANCEL",
+                detail=f"Token with status '{token.status}' cannot be cancelled.",
+            )
+
+        old_status = token.status
+        token.status = "cancelled"
+        token.cancelled_reason = reason
+
+        token_event = TokenEvent(
+            token_id=token.id,
+            clinic_id=token.clinic_id,
+            from_status=old_status,
+            to_status="cancelled",
+            actor_type="patient",
+            actor_id=None,
+        )
+        self.session.add(token_event)
+
+        AuditService.record_audit(
+            session=self.session,
+            action="token.cancel",
+            entity="token",
+            entity_id=token.id,
+            actor_type="patient",
+            actor_id=None,
+            clinic_id=token.clinic_id,
+            before={"status": old_status},
+            after={"status": "cancelled", "reason": reason},
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+        await self.session.refresh(token)
+
+        return TokenCancelResponse(
+            id=token.id,
+            number=token.number,
+            public_code=token.public_code,
+            status=token.status,
+            cancelled_reason=token.cancelled_reason,
+            message="Token cancelled successfully.",
         )

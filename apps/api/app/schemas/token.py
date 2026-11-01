@@ -80,3 +80,41 @@ class PublicClinicInfoResponse(BaseModel):
     phone: str | None = None
     online_booking_enabled: bool = True
     doctors: list[PublicDoctorInfo] = []
+
+
+class TokenDetailsResponse(BaseModel):
+    """Detailed token state for Token Confirm (F-002) and Live Queue (F-003)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    number: int
+    public_code: str
+    status: str
+    source: str
+    visit_date: date
+    doctor_id: uuid.UUID
+    doctor_name: str
+    specialty: str | None = None
+    clinic_id: uuid.UUID
+    clinic_name: str
+    clinic_slug: str
+    position: Decimal | float
+    estimated_at: datetime | None = None
+    people_ahead: int = 0
+    current_serving_number: int | None = None
+    cancelled_reason: str | None = None
+    created_at: datetime
+
+
+class TokenCancelResponse(BaseModel):
+    """Response returned when a token is cancelled."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    number: int
+    public_code: str
+    status: str
+    cancelled_reason: str | None = None
+    message: str = "Token cancelled successfully."
