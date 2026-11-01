@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
-**Last completed:** 36 Form pattern: validation, error display, double-submit protection [web-app pack]
-**In progress:** 37 Accessibility and performance gates [web-app pack]
-**Next:** 38 End-to-end smoke test of the critical flow [web-app pack]
+**Last completed:** 48 Webhook endpoint with signature verification and idempotency [integrations pack]
+**In progress:** 49 Failure handling and alerting [integrations pack]
+**Next:** Phase 2 — Reception, doctor, TV (Task 50)
 **Blockers:** None
 
 ---
@@ -67,7 +67,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 45 Tracing with redaction [agents pack]
 - [x] 46 Authentication to the vendor (OAuth or key) with token refresh [in…
 - [x] 47 One end-to-end integration flow against the sandbox [integrations…
-- [ ] 48 Webhook endpoint with signature verification and idempotency [inte…
+- [x] 48 Webhook endpoint with signature verification and idempotency [inte…
 - [ ] 49 Failure handling and alerting [integrations pack]
 
 ## Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job

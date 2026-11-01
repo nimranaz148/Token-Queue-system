@@ -10,6 +10,7 @@ from app.routers.doctors import router as doctors_router
 from app.routers.health import router as health_router
 from app.routers.members import router as members_router
 from app.routers.public_tokens import router as public_tokens_router
+from app.routers.webhooks import router as webhooks_router
 
 app = FastAPI(
     title="Clinic Token & Queue SaaS API",
@@ -37,6 +38,7 @@ app.include_router(admin_clinics_router, prefix="/api/v1")
 app.include_router(members_router, prefix="/api/v1")
 app.include_router(doctors_router, prefix="/api/v1")
 app.include_router(public_tokens_router, prefix="/api/v1")
+app.include_router(webhooks_router, prefix="/api/v1")
 
 
 @app.get("/")

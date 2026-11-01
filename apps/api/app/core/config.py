@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     gemini_default_model: str = "gemini-1.5-flash"
     ai_clinic_monthly_cap_usd: float = 2.0
     ai_global_monthly_cap_usd: float = 50.0
+    webhook_secret: str = "dev-webhook-secret-change-in-production"
 
 
 settings = Settings()
