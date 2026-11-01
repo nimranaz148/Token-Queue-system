@@ -4,10 +4,11 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import (
+    bad_request,
     conflict,
     forbidden,
     not_found,
@@ -20,10 +21,12 @@ from app.models.clinic import Clinic, ClinicSettings
 from app.models.doctor import Doctor, DoctorSchedule
 from app.models.patient import Patient
 from app.models.token import Token, TokenCounter, TokenEvent
+from app.schemas.auth import CurrentUser, Role
 from app.schemas.token import (
     PublicClinicInfoResponse,
     PublicDoctorInfo,
     PublicDoctorSchedule,
+    ReceptionTokenListItem,
     TokenBookingRequest,
     TokenBookingResponse,
     TokenCancelResponse,
@@ -55,9 +58,7 @@ class TokenService:
         settings_stmt = select(ClinicSettings).where(ClinicSettings.clinic_id == clinic.id)
         settings_res = await self.session.execute(settings_stmt)
         clinic_settings = settings_res.scalar_one_or_none()
-        online_booking_enabled = (
-            clinic_settings.online_booking_enabled if clinic_settings else True
-        )
+        online_booking_enabled = clinic_settings.online_booking_enabled if clinic_settings else True
 
         # Doctors
         docs_stmt = (
@@ -185,7 +186,11 @@ class TokenService:
         schedule = sched_res.scalars().first()
 
         # Check total schedules for this doctor
-        any_sched_stmt = select(func.count()).select_from(DoctorSchedule).where(DoctorSchedule.doctor_id == doctor.id)
+        any_sched_stmt = (
+            select(func.count())
+            .select_from(DoctorSchedule)
+            .where(DoctorSchedule.doctor_id == doctor.id)
+        )
         total_scheds = (await self.session.execute(any_sched_stmt)).scalar() or 0
         if total_scheds > 0 and schedule is None:
             raise unprocessable_entity(
@@ -533,4 +538,330 @@ class TokenService:
             status=token.status,
             cancelled_reason=token.cancelled_reason,
             message="Token cancelled successfully.",
+        )
+
+    async def list_reception_tokens(
+        self,
+        clinic_id: uuid.UUID,
+        current_user: CurrentUser,
+        target_date: date,
+        doctor_id: uuid.UUID | None = None,
+        status_filter: list[str] | None = None,
+        search: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[ReceptionTokenListItem], int]:
+        """List tokens for Aaj ki List reception view (PRD §5.3 F-004).
+
+        Permissions:
+        - reception, owner: full clinic view.
+        - doctor: own tokens only (token.doctor_id == current_user.doctor_id).
+        - others: 403 FORBIDDEN.
+        """
+        role = current_user.role
+        if role not in (Role.RECEPTION, Role.OWNER, Role.DOCTOR):
+            raise forbidden(
+                code="FORBIDDEN",
+                detail="Only reception, owner, or doctor can access Aaj ki List.",
+            )
+
+        # Doctor can only see their own queue
+        if role == Role.DOCTOR:
+            if not current_user.doctor_id:
+                raise forbidden(
+                    code="DOCTOR_PROFILE_MISSING",
+                    detail="Doctor profile not associated with user.",
+                )
+            if doctor_id and doctor_id != current_user.doctor_id:
+                raise forbidden(
+                    code="FORBIDDEN_DOCTOR_QUEUE",
+                    detail="Doctors can only view their own token queue.",
+                )
+            doctor_id = current_user.doctor_id
+
+        stmt = (
+            select(Token, Patient, Doctor)
+            .join(Patient, Token.patient_id == Patient.id)
+            .join(Doctor, Token.doctor_id == Doctor.id)
+            .where(
+                Token.clinic_id == clinic_id,
+                Token.visit_date == target_date,
+            )
+        )
+
+        if doctor_id:
+            stmt = stmt.where(Token.doctor_id == doctor_id)
+
+        if status_filter:
+            stmt = stmt.where(Token.status.in_(status_filter))
+
+        if search and len(search.strip()) >= 2:
+            s = f"%{search.strip().lower()}%"
+            stmt = stmt.where(
+                or_(
+                    func.lower(Patient.name).like(s),
+                    Patient.phone.like(s),
+                )
+            )
+
+        # Count total
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total_res = await self.session.execute(count_stmt)
+        total = total_res.scalar() or 0
+
+        # Sort by position ascending
+        stmt = stmt.order_by(Token.position.asc(), Token.number.asc()).limit(limit).offset(offset)
+        rows_res = await self.session.execute(stmt)
+        rows = rows_res.all()
+
+        items: list[ReceptionTokenListItem] = []
+        for token, patient, doctor in rows:
+            raw_phone = patient.phone or ""
+            masked_phone = f"***{raw_phone[-4:]}" if len(raw_phone) >= 4 else "***"
+
+            items.append(
+                ReceptionTokenListItem(
+                    id=token.id,
+                    number=token.number,
+                    patient_id=patient.id,
+                    patient_name=patient.name,
+                    phone=masked_phone,
+                    source=token.source,
+                    status=token.status,
+                    doctor_id=doctor.id,
+                    doctor_name=doctor.name,
+                    visit_date=token.visit_date,
+                    position=token.position,
+                    arrived_at=token.arrived_at,
+                    called_at=token.called_at,
+                    completed_at=token.completed_at,
+                    cancelled_reason=token.cancelled_reason,
+                    created_at=token.created_at,
+                )
+            )
+
+        return items, total
+
+    async def mark_token_arrived(
+        self,
+        clinic_id: uuid.UUID,
+        token_id: uuid.UUID,
+        current_user: CurrentUser,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> ReceptionTokenListItem:
+        """Mark a booked token as arrived (PRD §5.3 F-004, W-003).
+
+        Permissions: reception, owner.
+        Rule: Only allowed from status 'booked'.
+        """
+        if current_user.role not in (Role.RECEPTION, Role.OWNER):
+            raise forbidden(
+                code="FORBIDDEN",
+                detail="Only reception or owner can mark tokens arrived.",
+            )
+
+        stmt = (
+            select(Token, Patient, Doctor)
+            .join(Patient, Token.patient_id == Patient.id)
+            .join(Doctor, Token.doctor_id == Doctor.id)
+            .where(
+                Token.id == token_id,
+                Token.clinic_id == clinic_id,
+            )
+        )
+        res = await self.session.execute(stmt)
+        row = res.one_or_none()
+        if not row:
+            raise not_found(
+                code="TOKEN_NOT_FOUND",
+                detail=f"Token with ID {token_id} not found.",
+            )
+
+        token, patient, doctor = row
+
+        if token.status != "booked":
+            raise bad_request(
+                code="INVALID_STATUS_TRANSITION",
+                detail=f"Cannot mark token arrived from status '{token.status}'. Must be 'booked'.",
+            )
+
+        old_status = token.status
+        token.status = "arrived"
+        token.arrived_at = datetime.now(UTC)
+
+        token_event = TokenEvent(
+            token_id=token.id,
+            clinic_id=token.clinic_id,
+            from_status=old_status,
+            to_status="arrived",
+            actor_type="staff",
+            actor_id=current_user.user_id,
+        )
+        self.session.add(token_event)
+
+        AuditService.record_audit(
+            session=self.session,
+            action="token.arrive",
+            entity="token",
+            entity_id=token.id,
+            actor_type="staff",
+            actor_id=current_user.user_id,
+            clinic_id=token.clinic_id,
+            before={"status": old_status},
+            after={"status": "arrived", "arrived_at": token.arrived_at.isoformat()},
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+        await self.session.refresh(token)
+
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=token.clinic_id,
+                doctor_id=token.doctor_id,
+                event="token.arrived",
+                token_number=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on mark_token_arrived: %s", exc)
+
+        raw_phone = patient.phone or ""
+        masked_phone = f"***{raw_phone[-4:]}" if len(raw_phone) >= 4 else "***"
+
+        return ReceptionTokenListItem(
+            id=token.id,
+            number=token.number,
+            patient_id=patient.id,
+            patient_name=patient.name,
+            phone=masked_phone,
+            source=token.source,
+            status=token.status,
+            doctor_id=doctor.id,
+            doctor_name=doctor.name,
+            visit_date=token.visit_date,
+            position=token.position,
+            arrived_at=token.arrived_at,
+            called_at=token.called_at,
+            completed_at=token.completed_at,
+            cancelled_reason=token.cancelled_reason,
+            created_at=token.created_at,
+        )
+
+    async def cancel_token_by_staff(
+        self,
+        clinic_id: uuid.UUID,
+        token_id: uuid.UUID,
+        reason: str,
+        current_user: CurrentUser,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> ReceptionTokenListItem:
+        """Cancel a token by staff with mandatory reason (PRD §5.3 F-004, W-005).
+
+        Permissions: reception, owner.
+        """
+        if current_user.role not in (Role.RECEPTION, Role.OWNER):
+            raise forbidden(
+                code="FORBIDDEN",
+                detail="Only reception or owner can cancel tokens.",
+            )
+
+        if not reason or len(reason.strip()) < 2:
+            raise bad_request(
+                code="REASON_REQUIRED",
+                detail="Cancellation reason is required (min 2 chars).",
+            )
+
+        stmt = (
+            select(Token, Patient, Doctor)
+            .join(Patient, Token.patient_id == Patient.id)
+            .join(Doctor, Token.doctor_id == Doctor.id)
+            .where(
+                Token.id == token_id,
+                Token.clinic_id == clinic_id,
+            )
+        )
+        res = await self.session.execute(stmt)
+        row = res.one_or_none()
+        if not row:
+            raise not_found(
+                code="TOKEN_NOT_FOUND",
+                detail=f"Token with ID {token_id} not found.",
+            )
+
+        token, patient, doctor = row
+
+        if token.status in ("done", "cancelled"):
+            raise conflict(
+                code="CANNOT_CANCEL",
+                detail=f"Token with status '{token.status}' cannot be cancelled.",
+            )
+
+        old_status = token.status
+        token.status = "cancelled"
+        token.cancelled_reason = reason.strip()
+
+        token_event = TokenEvent(
+            token_id=token.id,
+            clinic_id=token.clinic_id,
+            from_status=old_status,
+            to_status="cancelled",
+            actor_type="staff",
+            actor_id=current_user.user_id,
+        )
+        self.session.add(token_event)
+
+        AuditService.record_audit(
+            session=self.session,
+            action="token.cancel",
+            entity="token",
+            entity_id=token.id,
+            actor_type="staff",
+            actor_id=current_user.user_id,
+            clinic_id=token.clinic_id,
+            before={"status": old_status},
+            after={"status": "cancelled", "reason": reason.strip()},
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+        await self.session.refresh(token)
+
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=token.clinic_id,
+                doctor_id=token.doctor_id,
+                event="token.cancelled",
+                token_number=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on cancel_token_by_staff: %s", exc)
+
+        raw_phone = patient.phone or ""
+        masked_phone = f"***{raw_phone[-4:]}" if len(raw_phone) >= 4 else "***"
+
+        return ReceptionTokenListItem(
+            id=token.id,
+            number=token.number,
+            patient_id=patient.id,
+            patient_name=patient.name,
+            phone=masked_phone,
+            source=token.source,
+            status=token.status,
+            doctor_id=doctor.id,
+            doctor_name=doctor.name,
+            visit_date=token.visit_date,
+            position=token.position,
+            arrived_at=token.arrived_at,
+            called_at=token.called_at,
+            completed_at=token.completed_at,
+            cancelled_reason=token.cancelled_reason,
+            created_at=token.created_at,
         )

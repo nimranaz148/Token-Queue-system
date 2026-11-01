@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
-**Last completed:** 49 Failure handling and alerting [integrations pack] (Phase 1 COMPLETE: 21/21 tasks)
-**In progress:** 50 Aaj ki List — F-004 (Reception; list; P0; roles: reception, owner, doctor (own))
-**Next:** 51 Walk-in Entry — F-005 (Reception; transaction; P0; roles: reception, owner)
+**Last completed:** 50 Aaj ki List — F-004 (Reception; list; P0; roles: reception, owner, doctor (own))
+**In progress:** 51 Walk-in Entry — F-005 (Reception; transaction; P0; roles: reception, owner)
+**Next:** 52 Patient Search & Profile — F-006 (Reception; list; P1; roles: reception, owner, doctor)
 **Blockers:** None
 
 ---
@@ -72,7 +72,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 ## Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
 
-- [ ] 50 Aaj ki List
+- [x] 50 Aaj ki List
 - [ ] 51 Walk-in Entry
 - [ ] 52 Patient Search & Profile
 - [ ] 53 Next Patient (Doctor Panel)

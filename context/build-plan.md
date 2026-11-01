@@ -207,7 +207,7 @@ Each task: confirm the acceptance criteria (`/architect` turns them into failing
 
 Exit gate: Online + walk-in tokens in one list; doctor presses NEXT and TV + patient phone change within 3 s; day close marks no-shows; with sharing ON the patient sees the doctor's advice on the token link, with sharing OFF they do not
 
-- [ ] 50 Aaj ki List — F-004 (Reception; list; P0; roles: reception, owner, doctor (own))
+- [x] 50 Aaj ki List — F-004 (Reception; list; P0; roles: reception, owner, doctor (own))
   - Acceptance: A user with one of the roles (reception, owner, doctor (own)) can complete the Reception flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-004 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored

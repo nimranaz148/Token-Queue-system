@@ -119,3 +119,40 @@ class TokenCancelResponse(BaseModel):
     status: str
     cancelled_reason: str | None = None
     message: str = "Token cancelled successfully."
+
+
+class ReceptionTokenListItem(BaseModel):
+    """Row item in Aaj ki List reception view (PRD §5.3 F-004)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    number: int
+    patient_id: uuid.UUID
+    patient_name: str
+    phone: str
+    source: str
+    status: str
+    doctor_id: uuid.UUID
+    doctor_name: str
+    visit_date: date
+    position: Decimal | float
+    arrived_at: datetime | None = None
+    called_at: datetime | None = None
+    completed_at: datetime | None = None
+    cancelled_reason: str | None = None
+    created_at: datetime
+
+
+class ReceptionTokenListResponse(BaseModel):
+    """Paginated response for Aaj ki List (PRD §5.3 F-004)."""
+
+    items: list[ReceptionTokenListItem]
+    total: int
+    date: date
+
+
+class TokenCancelStaffRequest(BaseModel):
+    """Payload for staff cancellation of a token with required reason (PRD §5.3 F-004)."""
+
+    reason: str = Field(..., min_length=2, max_length=200, description="Reason required")
