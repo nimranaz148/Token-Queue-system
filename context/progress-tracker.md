@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
-**Last completed:** 33 Integration: Supabase Realtime broadcast — I-002 (out; HTTPS publish)
-**In progress:** 34 Integration: Cloudflare Turnstile — I-003
-**Next:** 35 First vertical slice through the UI, API and database [web-app pack]
+**Last completed:** 34 Integration: Cloudflare Turnstile — I-003 (in; HTTPS verify)
+**In progress:** 35 First vertical slice through the UI, API and database [web-app pack]
+**Next:** 36 Form pattern: validation, error display, double-submit protection [web-app pack]
 **Blockers:** None
 
 ---
@@ -53,7 +53,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 31 Live Queue
 - [x] 32 Doctor Management
 - [x] 33 Integration: Supabase Realtime broadcast
-- [ ] 34 Integration: Cloudflare Turnstile
+- [x] 34 Integration: Cloudflare Turnstile
 - [ ] 35 First vertical slice through the UI, API and database [web-app pac…
 - [ ] 36 Form pattern: validation, error display, double-submit protection…
 - [ ] 37 Accessibility and performance gates [web-app pack]

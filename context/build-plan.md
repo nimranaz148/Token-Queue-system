@@ -156,7 +156,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
 - [x] 33 Integration: Supabase Realtime broadcast — I-002 (out; HTTPS publish)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
-- [ ] 34 Integration: Cloudflare Turnstile — I-003 (in; HTTPS verify)
+- [x] 34 Integration: Cloudflare Turnstile — I-003 (in; HTTPS verify)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
 - [ ] 35 First vertical slice through the UI, API and database [web-app pack]
