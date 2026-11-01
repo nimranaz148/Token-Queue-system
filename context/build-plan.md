@@ -162,7 +162,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
 - [x] 35 First vertical slice through the UI, API and database [web-app pack]
   - Acceptance: The slice works end to end with one automated test
   - Acceptance: the pattern is written down
-- [ ] 36 Form pattern: validation, error display, double-submit protection [web-app pack]
+- [x] 36 Form pattern: validation, error display, double-submit protection [web-app pack]
   - Acceptance: Server and client reject the same invalid inputs
   - Acceptance: a second click does not create a second record
 - [ ] 37 Accessibility and performance gates [web-app pack]
