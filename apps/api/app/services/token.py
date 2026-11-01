@@ -19,10 +19,16 @@ from app.integrations.realtime import SupabaseRealtimeClient
 from app.integrations.turnstile import TurnstileService
 from app.models.clinic import Clinic, ClinicSettings
 from app.models.doctor import Doctor, DoctorSchedule
+from app.models.member import ClinicMember
 from app.models.patient import Patient
 from app.models.token import Token, TokenCounter, TokenEvent
+from app.models.visit import Visit
+from app.schemas.audit import AuditAction
 from app.schemas.auth import CurrentUser, Role
 from app.schemas.token import (
+    DoctorNextActionResponse,
+    DoctorQueueResponse,
+    DoctorQueueToken,
     PublicClinicInfoResponse,
     PublicDoctorInfo,
     PublicDoctorSchedule,
@@ -1080,4 +1086,657 @@ class TokenService:
             position=token.position,
             arrived_at=token.arrived_at or now,
             created_at=token.created_at,
+        )
+
+    # -------------------------------------------------------------------------
+    # Doctor Queue Operations (PRD §5.3 F-007, W-004)
+    # -------------------------------------------------------------------------
+
+    async def _resolve_doctor_id(
+        self,
+        clinic_id: uuid.UUID,
+        doctor_id: uuid.UUID | None,
+        current_user: CurrentUser,
+    ) -> uuid.UUID:
+        """Resolve and validate the effective doctor ID for queue operations."""
+        if current_user.role == Role.DOCTOR:
+            if current_user.doctor_id:
+                if doctor_id and doctor_id != current_user.doctor_id:
+                    raise forbidden(
+                        code="FORBIDDEN",
+                        detail="Doctors are only authorized to manage their own queue.",
+                    )
+                return current_user.doctor_id
+
+            stmt = select(ClinicMember.doctor_id).where(
+                ClinicMember.clinic_id == clinic_id,
+                ClinicMember.user_id == current_user.user_id,
+                ClinicMember.deleted_at.is_(None),
+            )
+            res = await self.session.execute(stmt)
+            doc_id = res.scalar_one_or_none()
+            if doc_id:
+                if doctor_id and doctor_id != doc_id:
+                    raise forbidden(
+                        code="FORBIDDEN",
+                        detail="Doctors are only authorized to manage their own queue.",
+                    )
+                return doc_id
+            raise forbidden(code="NO_DOCTOR_PROFILE", detail="No doctor profile assigned to user.")
+
+        if doctor_id:
+            return doctor_id
+
+        doc_stmt = (
+            select(Doctor.id)
+            .where(Doctor.clinic_id == clinic_id, Doctor.active.is_(True))
+            .limit(1)
+        )
+        res = await self.session.execute(doc_stmt)
+        first_doc = res.scalar_one_or_none()
+        if first_doc:
+            return first_doc
+        raise bad_request(code="NO_DOCTOR", detail="No doctor specified or found for this clinic.")
+
+    async def get_doctor_queue(
+        self,
+        clinic_id: uuid.UUID,
+        doctor_id: uuid.UUID | None,
+        visit_date: date | None,
+        current_user: CurrentUser,
+    ) -> DoctorQueueResponse:
+        """Retrieve the live doctor queue, including current serving and next 3 (F-007)."""
+        if current_user.role not in {Role.DOCTOR, Role.OWNER}:
+            raise forbidden(code="FORBIDDEN", detail="Role not authorized to access doctor queue.")
+
+        effective_doctor_id = await self._resolve_doctor_id(clinic_id, doctor_id, current_user)
+        target_date = visit_date or date.today()
+
+        doc_stmt = select(Doctor).where(
+            Doctor.id == effective_doctor_id, Doctor.clinic_id == clinic_id
+        )
+        doc_res = await self.session.execute(doc_stmt)
+        doctor = doc_res.scalar_one_or_none()
+        if not doctor:
+            raise not_found(code="DOCTOR_NOT_FOUND", detail="Doctor not found in this clinic.")
+
+        stmt = (
+            select(Token, Patient)
+            .join(Patient, Token.patient_id == Patient.id)
+            .where(
+                Token.clinic_id == clinic_id,
+                Token.doctor_id == effective_doctor_id,
+                Token.visit_date == target_date,
+            )
+            .order_by(Token.position.asc(), Token.number.asc())
+        )
+        res = await self.session.execute(stmt)
+        rows = res.all()
+
+        current_token: DoctorQueueToken | None = None
+        waiting_tokens: list[DoctorQueueToken] = []
+        skipped_tokens: list[DoctorQueueToken] = []
+        counts: dict[str, int] = {
+            "total": len(rows),
+            "serving": 0,
+            "arrived": 0,
+            "booked": 0,
+            "skipped": 0,
+            "hold": 0,
+            "done": 0,
+            "cancelled": 0,
+            "no_show": 0,
+        }
+
+        today = date.today()
+        for token, patient in rows:
+            counts[token.status] = counts.get(token.status, 0) + 1
+
+            age = None
+            if patient.date_of_birth:
+                dob = patient.date_of_birth
+                age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+            q_token = DoctorQueueToken(
+                id=token.id,
+                number=token.number,
+                public_code=token.public_code,
+                status=token.status,
+                source=token.source,
+                patient_id=patient.id,
+                patient_name=patient.name,
+                patient_age=age,
+                patient_gender=patient.gender,
+                position=token.position,
+                arrived_at=token.arrived_at,
+                called_at=token.called_at,
+                cancelled_reason=token.cancelled_reason,
+                created_at=token.created_at,
+            )
+
+            if token.status == "serving" and not current_token:
+                current_token = q_token
+            elif token.status in {"arrived", "booked"}:
+                waiting_tokens.append(q_token)
+            elif token.status in {"skipped", "hold"}:
+                skipped_tokens.append(q_token)
+
+        arrived_waiting = [t for t in waiting_tokens if t.status == "arrived"]
+        booked_waiting = [t for t in waiting_tokens if t.status == "booked"]
+        next_tokens = (arrived_waiting + booked_waiting)[:3]
+
+        return DoctorQueueResponse(
+            doctor_id=effective_doctor_id,
+            doctor_name=doctor.name,
+            visit_date=target_date,
+            current_token=current_token,
+            next_tokens=next_tokens,
+            waiting_tokens=waiting_tokens,
+            skipped_tokens=skipped_tokens,
+            counts=counts,
+        )
+
+    async def call_next_patient(
+        self,
+        clinic_id: uuid.UUID,
+        doctor_id: uuid.UUID | None,
+        quick_note: str | None,
+        current_user: CurrentUser,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> DoctorNextActionResponse:
+        """Complete currently serving patient and advance to next in line (F-007, W-004)."""
+        if current_user.role not in {Role.DOCTOR, Role.OWNER}:
+            raise forbidden(code="FORBIDDEN", detail="Role not authorized to manage queue.")
+
+        effective_doctor_id = await self._resolve_doctor_id(clinic_id, doctor_id, current_user)
+        today = date.today()
+        now = datetime.now(UTC)
+
+        stmt = (
+            select(Token, Patient)
+            .join(Patient, Token.patient_id == Patient.id)
+            .where(
+                Token.clinic_id == clinic_id,
+                Token.doctor_id == effective_doctor_id,
+                Token.visit_date == today,
+            )
+            .order_by(Token.position.asc(), Token.number.asc())
+        )
+        res = await self.session.execute(stmt)
+        rows = res.all()
+
+        current_row = next((r for r in rows if r[0].status == "serving"), None)
+        prev_token_dto: DoctorQueueToken | None = None
+
+        if current_row:
+            cur_token, cur_patient = current_row
+            cur_token.status = "done"
+            cur_token.completed_at = now
+
+            prev_age = None
+            if cur_patient.date_of_birth:
+                dob = cur_patient.date_of_birth
+                prev_age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+            prev_token_dto = DoctorQueueToken(
+                id=cur_token.id,
+                number=cur_token.number,
+                public_code=cur_token.public_code,
+                status="done",
+                source=cur_token.source,
+                patient_id=cur_patient.id,
+                patient_name=cur_patient.name,
+                patient_age=prev_age,
+                patient_gender=cur_patient.gender,
+                position=cur_token.position,
+                arrived_at=cur_token.arrived_at,
+                called_at=cur_token.called_at,
+                created_at=cur_token.created_at,
+            )
+
+            self.session.add(
+                TokenEvent(
+                    clinic_id=clinic_id,
+                    token_id=cur_token.id,
+                    from_status="serving",
+                    to_status="done",
+                    actor_type="staff",
+                    actor_id=current_user.user_id,
+                    at=now,
+                )
+            )
+
+            if quick_note and quick_note.strip():
+                visit = Visit(
+                    clinic_id=clinic_id,
+                    patient_id=cur_patient.id,
+                    doctor_id=effective_doctor_id,
+                    token_id=cur_token.id,
+                    notes=quick_note.strip(),
+                    created_by=current_user.user_id,
+                )
+                self.session.add(visit)
+
+        # Next eligible patient (arrived first, then booked)
+        arrived_candidates = [r for r in rows if r[0].status == "arrived"]
+        booked_candidates = [r for r in rows if r[0].status == "booked"]
+        next_candidates = arrived_candidates if arrived_candidates else booked_candidates
+
+        next_token_dto: DoctorQueueToken | None = None
+        if next_candidates:
+            next_token, next_patient = next_candidates[0]
+            from_st = next_token.status
+            next_token.status = "serving"
+            next_token.called_at = now
+
+            next_age = None
+            if next_patient.date_of_birth:
+                dob = next_patient.date_of_birth
+                next_age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+            next_token_dto = DoctorQueueToken(
+                id=next_token.id,
+                number=next_token.number,
+                public_code=next_token.public_code,
+                status="serving",
+                source=next_token.source,
+                patient_id=next_patient.id,
+                patient_name=next_patient.name,
+                patient_age=next_age,
+                patient_gender=next_patient.gender,
+                position=next_token.position,
+                arrived_at=next_token.arrived_at,
+                called_at=now,
+                created_at=next_token.created_at,
+            )
+
+            self.session.add(
+                TokenEvent(
+                    clinic_id=clinic_id,
+                    token_id=next_token.id,
+                    from_status=from_st,
+                    to_status="serving",
+                    actor_type="staff",
+                    actor_id=current_user.user_id,
+                    at=now,
+                )
+            )
+
+        AuditService.record_audit(
+            session=self.session,
+            action=AuditAction.TOKEN_NEXT,
+            entity="token",
+            entity_id=next_token_dto.id if next_token_dto else (prev_token_dto.id if prev_token_dto else None),
+            actor_type="staff",
+            actor_id=current_user.user_id,
+            clinic_id=clinic_id,
+            before={"serving_token_id": str(prev_token_dto.id) if prev_token_dto else None},
+            after={"serving_token_id": str(next_token_dto.id) if next_token_dto else None},
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=clinic_id,
+                doctor_id=effective_doctor_id,
+                event="token.next",
+                token_number=next_token_dto.number if next_token_dto else None,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on call_next_patient: %s", exc)
+
+        message = (
+            f"Called patient #{next_token_dto.number}"
+            if next_token_dto
+            else "No more waiting patients. Current consultation completed."
+        )
+
+        return DoctorNextActionResponse(
+            success=True,
+            previous_token=prev_token_dto,
+            current_token=next_token_dto,
+            already_advanced=False,
+            message=message,
+        )
+
+    async def skip_current_patient(
+        self,
+        clinic_id: uuid.UUID,
+        doctor_id: uuid.UUID | None,
+        current_user: CurrentUser,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> DoctorNextActionResponse:
+        """Mark currently serving patient as skipped (F-007, W-004)."""
+        if current_user.role not in {Role.DOCTOR, Role.OWNER}:
+            raise forbidden(code="FORBIDDEN", detail="Role not authorized to manage queue.")
+
+        effective_doctor_id = await self._resolve_doctor_id(clinic_id, doctor_id, current_user)
+        today = date.today()
+        now = datetime.now(UTC)
+
+        stmt = (
+            select(Token, Patient)
+            .join(Patient, Token.patient_id == Patient.id)
+            .where(
+                Token.clinic_id == clinic_id,
+                Token.doctor_id == effective_doctor_id,
+                Token.visit_date == today,
+                Token.status == "serving",
+            )
+        )
+        res = await self.session.execute(stmt)
+        row = res.first()
+
+        if not row:
+            raise bad_request(code="NO_ACTIVE_PATIENT", detail="No patient is currently being served.")
+
+        token, patient = row
+        token.status = "skipped"
+
+        age = None
+        if patient.date_of_birth:
+            dob = patient.date_of_birth
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+        token_dto = DoctorQueueToken(
+            id=token.id,
+            number=token.number,
+            public_code=token.public_code,
+            status="skipped",
+            source=token.source,
+            patient_id=patient.id,
+            patient_name=patient.name,
+            patient_age=age,
+            patient_gender=patient.gender,
+            position=token.position,
+            arrived_at=token.arrived_at,
+            called_at=token.called_at,
+            created_at=token.created_at,
+        )
+
+        self.session.add(
+            TokenEvent(
+                clinic_id=clinic_id,
+                token_id=token.id,
+                from_status="serving",
+                to_status="skipped",
+                actor_type="staff",
+                actor_id=current_user.user_id,
+                at=now,
+            )
+        )
+
+        AuditService.record_audit(
+            session=self.session,
+            action=AuditAction.TOKEN_SKIP,
+            entity="token",
+            entity_id=token.id,
+            actor_type="staff",
+            actor_id=current_user.user_id,
+            clinic_id=clinic_id,
+            before={"status": "serving"},
+            after={"status": "skipped"},
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=clinic_id,
+                doctor_id=effective_doctor_id,
+                event="token.skip",
+                token_number=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on skip_current_patient: %s", exc)
+
+        return DoctorNextActionResponse(
+            success=True,
+            previous_token=token_dto,
+            current_token=None,
+            already_advanced=False,
+            message=f"Patient #{token.number} has been skipped.",
+        )
+
+    async def hold_current_patient(
+        self,
+        clinic_id: uuid.UUID,
+        doctor_id: uuid.UUID | None,
+        reason: str | None,
+        current_user: CurrentUser,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> DoctorNextActionResponse:
+        """Mark currently serving patient on hold (F-007, W-004)."""
+        if current_user.role not in {Role.DOCTOR, Role.OWNER}:
+            raise forbidden(code="FORBIDDEN", detail="Role not authorized to manage queue.")
+
+        effective_doctor_id = await self._resolve_doctor_id(clinic_id, doctor_id, current_user)
+        today = date.today()
+        now = datetime.now(UTC)
+
+        stmt = (
+            select(Token, Patient)
+            .join(Patient, Token.patient_id == Patient.id)
+            .where(
+                Token.clinic_id == clinic_id,
+                Token.doctor_id == effective_doctor_id,
+                Token.visit_date == today,
+                Token.status == "serving",
+            )
+        )
+        res = await self.session.execute(stmt)
+        row = res.first()
+
+        if not row:
+            raise bad_request(code="NO_ACTIVE_PATIENT", detail="No patient is currently being served.")
+
+        token, patient = row
+        token.status = "hold"
+        token.cancelled_reason = reason
+
+        age = None
+        if patient.date_of_birth:
+            dob = patient.date_of_birth
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+        token_dto = DoctorQueueToken(
+            id=token.id,
+            number=token.number,
+            public_code=token.public_code,
+            status="hold",
+            source=token.source,
+            patient_id=patient.id,
+            patient_name=patient.name,
+            patient_age=age,
+            patient_gender=patient.gender,
+            position=token.position,
+            arrived_at=token.arrived_at,
+            called_at=token.called_at,
+            cancelled_reason=reason,
+            created_at=token.created_at,
+        )
+
+        self.session.add(
+            TokenEvent(
+                clinic_id=clinic_id,
+                token_id=token.id,
+                from_status="serving",
+                to_status="hold",
+                actor_type="staff",
+                actor_id=current_user.user_id,
+                at=now,
+            )
+        )
+
+        AuditService.record_audit(
+            session=self.session,
+            action=AuditAction.TOKEN_HOLD,
+            entity="token",
+            entity_id=token.id,
+            actor_type="staff",
+            actor_id=current_user.user_id,
+            clinic_id=clinic_id,
+            before={"status": "serving"},
+            after={"status": "hold", "reason": reason},
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=clinic_id,
+                doctor_id=effective_doctor_id,
+                event="token.hold",
+                token_number=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on hold_current_patient: %s", exc)
+
+        return DoctorNextActionResponse(
+            success=True,
+            previous_token=token_dto,
+            current_token=None,
+            already_advanced=False,
+            message=f"Patient #{token.number} placed on hold.",
+        )
+
+    async def recall_patient(
+        self,
+        clinic_id: uuid.UUID,
+        doctor_id: uuid.UUID | None,
+        token_id: uuid.UUID,
+        current_user: CurrentUser,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> DoctorNextActionResponse:
+        """Recall a skipped or hold patient back to the front of arrived queue (F-007, W-004)."""
+        if current_user.role not in {Role.DOCTOR, Role.OWNER}:
+            raise forbidden(code="FORBIDDEN", detail="Role not authorized to manage queue.")
+
+        effective_doctor_id = await self._resolve_doctor_id(clinic_id, doctor_id, current_user)
+        today = date.today()
+        now = datetime.now(UTC)
+
+        stmt = (
+            select(Token, Patient)
+            .join(Patient, Token.patient_id == Patient.id)
+            .where(
+                Token.id == token_id,
+                Token.clinic_id == clinic_id,
+                Token.doctor_id == effective_doctor_id,
+            )
+        )
+        res = await self.session.execute(stmt)
+        row = res.first()
+
+        if not row:
+            raise not_found(code="TOKEN_NOT_FOUND", detail="Token not found for this doctor.")
+
+        token, patient = row
+        if token.status not in {"skipped", "hold"}:
+            raise bad_request(
+                code="INVALID_TOKEN_STATE",
+                detail=f"Only skipped or hold tokens can be recalled (current: {token.status}).",
+            )
+
+        old_status = token.status
+
+        # Find lowest position among currently arrived tokens to place at front
+        pos_stmt = select(func.min(Token.position)).where(
+            Token.clinic_id == clinic_id,
+            Token.doctor_id == effective_doctor_id,
+            Token.visit_date == today,
+            Token.status == "arrived",
+        )
+        pos_res = await self.session.execute(pos_stmt)
+        min_pos = pos_res.scalar_one_or_none()
+
+        new_pos = Decimal(str(min_pos - Decimal("1.00"))) if min_pos is not None else Decimal("0.50")
+        token.status = "arrived"
+        token.position = new_pos
+        token.cancelled_reason = None
+
+        age = None
+        if patient.date_of_birth:
+            dob = patient.date_of_birth
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+        token_dto = DoctorQueueToken(
+            id=token.id,
+            number=token.number,
+            public_code=token.public_code,
+            status="arrived",
+            source=token.source,
+            patient_id=patient.id,
+            patient_name=patient.name,
+            patient_age=age,
+            patient_gender=patient.gender,
+            position=token.position,
+            arrived_at=token.arrived_at,
+            called_at=token.called_at,
+            created_at=token.created_at,
+        )
+
+        self.session.add(
+            TokenEvent(
+                clinic_id=clinic_id,
+                token_id=token.id,
+                from_status=old_status,
+                to_status="arrived",
+                actor_type="staff",
+                actor_id=current_user.user_id,
+                at=now,
+            )
+        )
+
+        AuditService.record_audit(
+            session=self.session,
+            action=AuditAction.TOKEN_RECALL,
+            entity="token",
+            entity_id=token.id,
+            actor_type="staff",
+            actor_id=current_user.user_id,
+            clinic_id=clinic_id,
+            before={"status": old_status},
+            after={"status": "arrived", "position": float(new_pos)},
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
+        await self.session.commit()
+
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=clinic_id,
+                doctor_id=effective_doctor_id,
+                event="token.recall",
+                token_number=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on recall_patient: %s", exc)
+
+        return DoctorNextActionResponse(
+            success=True,
+            previous_token=None,
+            current_token=token_dto,
+            already_advanced=False,
+            message=f"Patient #{token.number} recalled to front of queue.",
         )

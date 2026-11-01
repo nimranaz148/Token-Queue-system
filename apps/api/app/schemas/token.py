@@ -9,7 +9,9 @@ class TokenBookingRequest(BaseModel):
     """Payload for patient online token booking (PRD §5.3 F-001, W-001)."""
 
     doctor_id: uuid.UUID = Field(..., description="ID of the doctor / OPD selected")
-    visit_date: date = Field(..., description="Visit date ('today' or 'tomorrow' in clinic time zone)")
+    visit_date: date = Field(
+        ..., description="Visit date ('today' or 'tomorrow' in clinic time zone)"
+    )
     patient_name: str = Field(
         ...,
         min_length=2,
@@ -191,3 +193,74 @@ class WalkInTokenResponse(BaseModel):
     position: Decimal | float
     arrived_at: datetime
     created_at: datetime
+
+
+class DoctorQueueToken(BaseModel):
+    """Token representation in the doctor consultation panel (PRD §5.3 F-007)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    number: int
+    public_code: str
+    status: str
+    source: str
+    patient_id: uuid.UUID
+    patient_name: str
+    patient_age: int | None = None
+    patient_gender: str | None = None
+    position: Decimal | float
+    arrived_at: datetime | None = None
+    called_at: datetime | None = None
+    cancelled_reason: str | None = None
+    created_at: datetime
+
+
+class DoctorQueueResponse(BaseModel):
+    """Active queue snapshot for doctor panel (PRD §5.3 F-007)."""
+
+    doctor_id: uuid.UUID
+    doctor_name: str
+    visit_date: date
+    current_token: DoctorQueueToken | None = None
+    next_tokens: list[DoctorQueueToken] = []
+    waiting_tokens: list[DoctorQueueToken] = []
+    skipped_tokens: list[DoctorQueueToken] = []
+    counts: dict[str, int] = {}
+
+
+class DoctorNextActionRequest(BaseModel):
+    """Payload to advance doctor queue to the next patient (PRD §5.3 F-007, W-004)."""
+
+    doctor_id: uuid.UUID | None = None
+    quick_note: str | None = Field(None, max_length=2000)
+
+
+class DoctorSkipActionRequest(BaseModel):
+    """Payload to mark current patient as skipped (PRD §5.3 F-007, W-004)."""
+
+    doctor_id: uuid.UUID | None = None
+
+
+class DoctorHoldActionRequest(BaseModel):
+    """Payload to mark current patient on hold (PRD §5.3 F-007, W-004)."""
+
+    doctor_id: uuid.UUID | None = None
+    reason: str | None = Field(None, max_length=200)
+
+
+class DoctorRecallActionRequest(BaseModel):
+    """Payload to recall a skipped or hold patient to the front of queue (PRD §5.3 F-007)."""
+
+    token_id: uuid.UUID
+    doctor_id: uuid.UUID | None = None
+
+
+class DoctorNextActionResponse(BaseModel):
+    """Result of NEXT / skip / hold / recall queue action (PRD §5.3 F-007)."""
+
+    success: bool = True
+    previous_token: DoctorQueueToken | None = None
+    current_token: DoctorQueueToken | None = None
+    already_advanced: bool = False
+    message: str

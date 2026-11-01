@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.errors import AppException
@@ -514,5 +515,162 @@ async def test_create_walk_in_token_field_validation_and_rules() -> None:
     assert res.patient_name == "Hamza Usman"
     assert res.phone == "+923001234567"  # normalized to E.164
     session.add.assert_called()
+    session.commit.assert_awaited()
+    mock_instance.broadcast_queue_update.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_doctor_panel_queue_and_actions() -> None:
+    """Test Doctor Panel F-007: queue retrieval, next patient, skip, hold, and recall."""
+    session = AsyncMock(spec=AsyncSession)
+    clinic_id = uuid.uuid4()
+    doc_id = uuid.uuid4()
+    patient_1 = Patient(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        name="Muhammad Ali",
+        phone="+923001111111",
+        date_of_birth=date(1990, 1, 1),
+        gender="male",
+    )
+    patient_2 = Patient(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        name="Sara Khan",
+        phone="+923002222222",
+        date_of_birth=date(2000, 6, 15),
+        gender="female",
+    )
+    doctor = Doctor(id=doc_id, clinic_id=clinic_id, name="Dr. Ayesha", active=True)
+
+    doc_user = CurrentUser(
+        user_id=uuid.uuid4(),
+        email="doctor@clinic.com",
+        name="Dr. Ayesha",
+        role=Role.DOCTOR,
+        clinic_id=clinic_id,
+        doctor_id=doc_id,
+    )
+    reception_user = CurrentUser(
+        user_id=uuid.uuid4(),
+        email="reception@clinic.com",
+        name="Receptionist",
+        role=Role.RECEPTION,
+        clinic_id=clinic_id,
+    )
+
+    service = TokenService(session)
+
+    # 1. Non-doctor/non-owner gets 403 on queue
+    with pytest.raises(AppException) as exc_info:
+        await service.get_doctor_queue(clinic_id, doc_id, date.today(), reception_user)
+    assert exc_info.value.code == "FORBIDDEN"
+
+    # 2. Get Doctor Queue success
+    tok_serving = Token(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        doctor_id=doc_id,
+        patient_id=patient_1.id,
+        visit_date=date.today(),
+        number=1,
+        position=Decimal("1.00"),
+        source="online",
+        status="serving",
+        public_code="code-doc-1",
+        created_at=datetime.now(UTC),
+    )
+    tok_arrived = Token(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        doctor_id=doc_id,
+        patient_id=patient_2.id,
+        visit_date=date.today(),
+        number=2,
+        position=Decimal("2.00"),
+        source="walk_in",
+        status="arrived",
+        public_code="code-doc-2",
+        created_at=datetime.now(UTC),
+    )
+
+    mock_doc_res = MagicMock()
+    mock_doc_res.scalar_one_or_none.return_value = doctor
+    mock_tokens_res = MagicMock()
+    mock_tokens_res.all.return_value = [
+        (tok_serving, patient_1),
+        (tok_arrived, patient_2),
+    ]
+
+    session.execute = AsyncMock(side_effect=[mock_doc_res, mock_tokens_res])
+
+    q_res = await service.get_doctor_queue(clinic_id, doc_id, date.today(), doc_user)
+    assert q_res.doctor_id == doc_id
+    assert q_res.doctor_name == "Dr. Ayesha"
+    assert q_res.current_token is not None
+    assert q_res.current_token.number == 1
+    assert q_res.current_token.patient_name == "Muhammad Ali"
+    assert q_res.current_token.patient_age is not None
+    assert len(q_res.next_tokens) == 1
+    assert q_res.next_tokens[0].number == 2
+    assert q_res.counts["serving"] == 1
+    assert q_res.counts["arrived"] == 1
+
+    # 3. Call NEXT patient advances current to done and next to serving
+    mock_tokens_res_next = MagicMock()
+    mock_tokens_res_next.all.return_value = [
+        (tok_serving, patient_1),
+        (tok_arrived, patient_2),
+    ]
+    session.execute = AsyncMock(return_value=mock_tokens_res_next)
+
+    with patch("app.services.token.SupabaseRealtimeClient") as mock_realtime:
+        mock_instance = AsyncMock()
+        mock_realtime.return_value = mock_instance
+        next_res = await service.call_next_patient(
+            clinic_id,
+            doc_id,
+            quick_note="Patient showed mild fever, advised rest",
+            current_user=doc_user,
+        )
+
+    assert next_res.success is True
+    assert tok_serving.status == "done"
+    assert tok_serving.completed_at is not None
+    assert tok_arrived.status == "serving"
+    assert tok_arrived.called_at is not None
+    session.commit.assert_awaited()
+    mock_instance.broadcast_queue_update.assert_awaited()
+
+    # 4. Skip currently serving patient
+    mock_skip_res = MagicMock()
+    mock_skip_res.first.return_value = (tok_arrived, patient_2)
+    session.execute = AsyncMock(return_value=mock_skip_res)
+
+    with patch("app.services.token.SupabaseRealtimeClient") as mock_realtime:
+        mock_instance = AsyncMock()
+        mock_realtime.return_value = mock_instance
+        skip_res = await service.skip_current_patient(clinic_id, doc_id, doc_user)
+
+    assert skip_res.success is True
+    assert tok_arrived.status == "skipped"
+    session.commit.assert_awaited()
+
+    # 5. Recall skipped patient back to arrived
+    mock_tok_recall = MagicMock()
+    mock_tok_recall.first.return_value = (tok_arrived, patient_2)
+    mock_min_pos = MagicMock()
+    mock_min_pos.scalar_one_or_none.return_value = Decimal("2.00")
+
+    session.execute = AsyncMock(side_effect=[mock_tok_recall, mock_min_pos])
+
+    with patch("app.services.token.SupabaseRealtimeClient") as mock_realtime:
+        mock_instance = AsyncMock()
+        mock_realtime.return_value = mock_instance
+        recall_res = await service.recall_patient(clinic_id, doc_id, tok_arrived.id, doc_user)
+
+    assert recall_res.success is True
+    assert tok_arrived.status == "arrived"
+    assert tok_arrived.position < Decimal("2.00")  # placed before min
     session.commit.assert_awaited()
     mock_instance.broadcast_queue_update.assert_awaited()

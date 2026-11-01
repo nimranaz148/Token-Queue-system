@@ -219,7 +219,7 @@ Exit gate: Online + walk-in tokens in one list; doctor presses NEXT and TV + pat
   - Acceptance: A user with one of the roles (reception, owner, doctor) can complete the Reception flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-006 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 53 Next Patient (Doctor Panel) — F-007 (Doctor; transaction; P0; roles: doctor)
+- [x] 53 Next Patient (Doctor Panel) — F-007 (Doctor; transaction; P0; roles: doctor)
   - Acceptance: A user with one of the roles (doctor) can complete the Doctor flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-007 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored

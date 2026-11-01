@@ -11,6 +11,12 @@ from app.core.errors import forbidden
 from app.core.permissions import get_current_user
 from app.schemas.auth import CurrentUser
 from app.schemas.token import (
+    DoctorHoldActionRequest,
+    DoctorNextActionRequest,
+    DoctorNextActionResponse,
+    DoctorQueueResponse,
+    DoctorRecallActionRequest,
+    DoctorSkipActionRequest,
     ReceptionTokenListItem,
     ReceptionTokenListResponse,
     TokenCancelStaffRequest,
@@ -41,7 +47,9 @@ async def list_tokens(
     """
     effective_date = target_date or date.today()
     if not current_user.clinic_id:
-        raise forbidden(code="CLINIC_REQUIRED", detail="User does not have an active clinic association.")
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
     service = TokenService(session)
 
     items, total = await service.list_reception_tokens(
@@ -76,7 +84,9 @@ async def create_walk_in_token(
     client_ip = request.client.host if request.client else None
     request_id = getattr(request.state, "request_id", None)
     if not current_user.clinic_id:
-        raise forbidden(code="CLINIC_REQUIRED", detail="User does not have an active clinic association.")
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
     service = TokenService(session)
 
     return await service.create_walk_in_token(
@@ -104,7 +114,9 @@ async def mark_token_arrived(
     client_ip = request.client.host if request.client else None
     request_id = getattr(request.state, "request_id", None)
     if not current_user.clinic_id:
-        raise forbidden(code="CLINIC_REQUIRED", detail="User does not have an active clinic association.")
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
     service = TokenService(session)
 
     return await service.mark_token_arrived(
@@ -133,13 +145,165 @@ async def cancel_token(
     client_ip = request.client.host if request.client else None
     request_id = getattr(request.state, "request_id", None)
     if not current_user.clinic_id:
-        raise forbidden(code="CLINIC_REQUIRED", detail="User does not have an active clinic association.")
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
     service = TokenService(session)
 
     return await service.cancel_token_by_staff(
         clinic_id=current_user.clinic_id,
         token_id=token_id,
         reason=body.reason,
+        current_user=current_user,
+        client_ip=client_ip,
+        request_id=request_id,
+    )
+
+
+# -----------------------------------------------------------------------------
+# Doctor Panel Queue Operations (PRD §5.3 F-007, W-004)
+# -----------------------------------------------------------------------------
+
+
+@router.get(
+    "/doctor/queue", response_model=DoctorQueueResponse, status_code=status.HTTP_200_OK
+)
+async def get_doctor_queue(
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+    doctor_id: Annotated[uuid.UUID | None, Query()] = None,
+    target_date: Annotated[date | None, Query(alias="date")] = None,
+) -> DoctorQueueResponse:
+    """Retrieve doctor consultation panel queue (PRD §5.3 F-007).
+
+    Permissions: doctor, owner.
+    """
+    if not current_user.clinic_id:
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
+    service = TokenService(session)
+    return await service.get_doctor_queue(
+        clinic_id=current_user.clinic_id,
+        doctor_id=doctor_id,
+        visit_date=target_date,
+        current_user=current_user,
+    )
+
+
+@router.post(
+    "/doctor/next", response_model=DoctorNextActionResponse, status_code=status.HTTP_200_OK
+)
+async def doctor_call_next(
+    payload: DoctorNextActionRequest,
+    request: Request,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> DoctorNextActionResponse:
+    """Advance to next patient: complete current serving and call next (F-007, W-004).
+
+    Permissions: doctor, owner.
+    """
+    client_ip = request.client.host if request.client else None
+    request_id = getattr(request.state, "request_id", None)
+    if not current_user.clinic_id:
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
+    service = TokenService(session)
+    return await service.call_next_patient(
+        clinic_id=current_user.clinic_id,
+        doctor_id=payload.doctor_id,
+        quick_note=payload.quick_note,
+        current_user=current_user,
+        client_ip=client_ip,
+        request_id=request_id,
+    )
+
+
+@router.post(
+    "/doctor/skip", response_model=DoctorNextActionResponse, status_code=status.HTTP_200_OK
+)
+async def doctor_skip_patient(
+    payload: DoctorSkipActionRequest,
+    request: Request,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> DoctorNextActionResponse:
+    """Skip currently serving patient (F-007, W-004).
+
+    Permissions: doctor, owner.
+    """
+    client_ip = request.client.host if request.client else None
+    request_id = getattr(request.state, "request_id", None)
+    if not current_user.clinic_id:
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
+    service = TokenService(session)
+    return await service.skip_current_patient(
+        clinic_id=current_user.clinic_id,
+        doctor_id=payload.doctor_id,
+        current_user=current_user,
+        client_ip=client_ip,
+        request_id=request_id,
+    )
+
+
+@router.post(
+    "/doctor/hold", response_model=DoctorNextActionResponse, status_code=status.HTTP_200_OK
+)
+async def doctor_hold_patient(
+    payload: DoctorHoldActionRequest,
+    request: Request,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> DoctorNextActionResponse:
+    """Place currently serving patient on hold with optional reason (F-007, W-004).
+
+    Permissions: doctor, owner.
+    """
+    client_ip = request.client.host if request.client else None
+    request_id = getattr(request.state, "request_id", None)
+    if not current_user.clinic_id:
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
+    service = TokenService(session)
+    return await service.hold_current_patient(
+        clinic_id=current_user.clinic_id,
+        doctor_id=payload.doctor_id,
+        reason=payload.reason,
+        current_user=current_user,
+        client_ip=client_ip,
+        request_id=request_id,
+    )
+
+
+@router.post(
+    "/doctor/recall", response_model=DoctorNextActionResponse, status_code=status.HTTP_200_OK
+)
+async def doctor_recall_patient(
+    payload: DoctorRecallActionRequest,
+    request: Request,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> DoctorNextActionResponse:
+    """Recall a skipped or hold patient back to the front of queue (F-007, W-004).
+
+    Permissions: doctor, owner.
+    """
+    client_ip = request.client.host if request.client else None
+    request_id = getattr(request.state, "request_id", None)
+    if not current_user.clinic_id:
+        raise forbidden(
+            code="CLINIC_REQUIRED", detail="User does not have an active clinic association."
+        )
+    service = TokenService(session)
+    return await service.recall_patient(
+        clinic_id=current_user.clinic_id,
+        doctor_id=payload.doctor_id,
+        token_id=payload.token_id,
         current_user=current_user,
         client_ip=client_ip,
         request_id=request_id,
