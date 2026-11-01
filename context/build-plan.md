@@ -125,7 +125,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
   - Acceptance: each tool has a unit test
 - [x] 26 Evaluation harness with a first golden set [agents pack]
   - Acceptance: The suite runs in the fast tier against recorded model responses
-- [ ] 27 Vendor accounts, sandbox access and credentials in the secret manager [integrations pack]
+- [x] 27 Vendor accounts, sandbox access and credentials in the secret manager [integrations pack]
   - Acceptance: A sandbox call succeeds from the dev environment
   - Acceptance: no credential is in the repository
 - [ ] 28 Integration skill: install an upstream one or generate a project-local one [integrations pack]
