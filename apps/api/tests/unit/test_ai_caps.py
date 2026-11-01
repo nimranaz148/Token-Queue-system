@@ -28,9 +28,7 @@ def test_token_run_cap_exceeded_stops_run_with_clear_message() -> None:
 
 def test_clinic_spend_cap_exceeded_stops_run_with_clear_message() -> None:
     """Acceptance criterion 1b: Exceeding a clinic spend cap stops the run with a clear message."""
-    manager = SpendCapManager(
-        default_clinic_cap=Decimal("2.00"), global_cap=Decimal("50.00")
-    )
+    manager = SpendCapManager(default_clinic_cap=Decimal("2.00"), global_cap=Decimal("50.00"))
     clinic_id = uuid.uuid4()
 
     # Under cap: $1.85 spent
@@ -66,9 +64,7 @@ def test_clinic_spend_cap_exceeded_stops_run_with_clear_message() -> None:
 
 def test_global_spend_cap_exceeded_stops_run_with_clear_message() -> None:
     """Acceptance criterion 1c: Exceeding the global spend cap stops all runs with a clear message."""
-    manager = SpendCapManager(
-        default_clinic_cap=Decimal("2.00"), global_cap=Decimal("50.00")
-    )
+    manager = SpendCapManager(default_clinic_cap=Decimal("2.00"), global_cap=Decimal("50.00"))
     clinic_id = uuid.uuid4()
 
     blocked, error_message = manager.check_spend(
@@ -102,69 +98,45 @@ def test_kill_switch_works_without_deploy() -> None:
         feature="patient_chat", clinic_id=clinic_a
     )
     assert blocked_global is False
-    assert (
-        reason_global
-        == "AI_SERVICE_DISABLED: Emergency maintenance on AI provider keys."
-    )
+    assert reason_global == "AI_SERVICE_DISABLED: Emergency maintenance on AI provider keys."
 
     # Deactivate global kill switch
     ks.deactivate_global()
-    ok_restored, _ = ks.check_is_operational(
-        feature="patient_chat", clinic_id=clinic_a
-    )
+    ok_restored, _ = ks.check_is_operational(feature="patient_chat", clinic_id=clinic_a)
     assert ok_restored is True
 
     # 2. Feature-specific kill switch without affecting other features
-    ks.disable_feature(
-        feature="patient_chat", reason="Spam anomaly detected in chat."
-    )
+    ks.disable_feature(feature="patient_chat", reason="Spam anomaly detected in chat.")
 
     # patient_chat is disabled
-    chat_blocked, chat_reason = ks.check_is_operational(
-        feature="patient_chat", clinic_id=clinic_a
-    )
+    chat_blocked, chat_reason = ks.check_is_operational(feature="patient_chat", clinic_id=clinic_a)
     assert chat_blocked is False
-    assert (
-        chat_reason == "AI_FEATURE_DISABLED: Spam anomaly detected in chat."
-    )
+    assert chat_reason == "AI_FEATURE_DISABLED: Spam anomaly detected in chat."
 
     # visit_summarizer continues operating normally
-    summarizer_ok, _ = ks.check_is_operational(
-        feature="visit_summarizer", clinic_id=clinic_a
-    )
+    summarizer_ok, _ = ks.check_is_operational(feature="visit_summarizer", clinic_id=clinic_a)
     assert summarizer_ok is True
 
     # Re-enable feature
     ks.enable_feature("patient_chat")
-    chat_ok, _ = ks.check_is_operational(
-        feature="patient_chat", clinic_id=clinic_a
-    )
+    chat_ok, _ = ks.check_is_operational(feature="patient_chat", clinic_id=clinic_a)
     assert chat_ok is True
 
     # 3. Clinic-specific kill switch without affecting other clinics
-    ks.disable_clinic(
-        clinic_id=clinic_a, reason="Clinic suspended due to billing."
-    )
+    ks.disable_clinic(clinic_id=clinic_a, reason="Clinic suspended due to billing.")
 
     # Clinic A is disabled
     clinic_a_blocked, clinic_a_reason = ks.check_is_operational(
         feature="daily_brief", clinic_id=clinic_a
     )
     assert clinic_a_blocked is False
-    assert (
-        clinic_a_reason
-        == "AI_CLINIC_DISABLED: Clinic suspended due to billing."
-    )
+    assert clinic_a_reason == "AI_CLINIC_DISABLED: Clinic suspended due to billing."
 
     # Clinic B is unaffected
-    clinic_b_ok, _ = ks.check_is_operational(
-        feature="daily_brief", clinic_id=clinic_b
-    )
+    clinic_b_ok, _ = ks.check_is_operational(feature="daily_brief", clinic_id=clinic_b)
     assert clinic_b_ok is True
 
     # Re-enable Clinic A
     ks.enable_clinic(clinic_id=clinic_a)
-    clinic_a_restored, _ = ks.check_is_operational(
-        feature="daily_brief", clinic_id=clinic_a
-    )
+    clinic_a_restored, _ = ks.check_is_operational(feature="daily_brief", clinic_id=clinic_a)
     assert clinic_a_restored is True

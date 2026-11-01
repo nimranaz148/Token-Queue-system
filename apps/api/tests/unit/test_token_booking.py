@@ -106,7 +106,9 @@ async def test_booking_assigns_next_sequence_number_per_doctor_per_day() -> None
         MagicMock(scalar_one_or_none=MagicMock(return_value=clinic)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=None)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=doctor)),
-        MagicMock(scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))),
+        MagicMock(
+            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))
+        ),
         MagicMock(scalar=MagicMock(return_value=1)),
         MagicMock(scalar=MagicMock(return_value=0)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=None)),
@@ -163,7 +165,9 @@ async def test_daily_online_limit_blocks_with_409() -> None:
         MagicMock(scalar_one_or_none=MagicMock(return_value=clinic)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=None)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=doctor)),
-        MagicMock(scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))),
+        MagicMock(
+            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))
+        ),
         MagicMock(scalar=MagicMock(return_value=1)),
         MagicMock(scalar=MagicMock(return_value=10)),  # limit reached: 10/10
     ]
@@ -231,7 +235,9 @@ async def test_active_duplicate_blocks_with_409_and_existing_link() -> None:
         MagicMock(scalar_one_or_none=MagicMock(return_value=clinic)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=None)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=doctor)),
-        MagicMock(scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))),
+        MagicMock(
+            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))
+        ),
         MagicMock(scalar=MagicMock(return_value=1)),
         MagicMock(scalar=MagicMock(return_value=4)),  # active count 4
         MagicMock(scalar_one_or_none=MagicMock(return_value=patient)),
@@ -312,7 +318,9 @@ def test_public_tokens_api_route(mock_db: AsyncMock) -> None:
         MagicMock(scalar_one_or_none=MagicMock(return_value=clinic)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=None)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=doctor)),
-        MagicMock(scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))),
+        MagicMock(
+            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=schedule)))
+        ),
         MagicMock(scalar=MagicMock(return_value=1)),
         MagicMock(scalar=MagicMock(return_value=1)),
         MagicMock(scalar_one_or_none=MagicMock(return_value=None)),

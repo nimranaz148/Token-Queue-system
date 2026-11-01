@@ -80,13 +80,9 @@ async def execute_tool(
                 args_dict["clinic_id"], args_dict["start_date"], args_dict["end_date"]
             )
         elif tool_name == "detect_anomalies":
-            data = await service.detect_anomalies(
-                args_dict["clinic_id"], args_dict["target_date"]
-            )
+            data = await service.detect_anomalies(args_dict["clinic_id"], args_dict["target_date"])
         elif tool_name == "get_consult_durations":
-            data = await service.get_consult_durations(
-                args_dict["doctor_id"], args_dict["limit"]
-            )
+            data = await service.get_consult_durations(args_dict["doctor_id"], args_dict["limit"])
         elif tool_name == "save_wait_prediction":
             data = await service.save_wait_prediction(
                 args_dict["token_id"],

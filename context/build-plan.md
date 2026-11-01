@@ -235,7 +235,7 @@ Exit gate: Online + walk-in tokens in one list; doctor presses NEXT and TV + pat
   - Acceptance: A user with one of the roles (owner) can complete the Owner flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-020 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 57 Doctor ki Hidayat (shared visit advice) — F-021 (Patient; report; P1; roles: public (by code))
+- [x] 57 Doctor ki Hidayat (shared visit advice) — F-021 (Patient; report; P1; roles: public (by code))
   - Acceptance: A user with one of the roles (public (by code)) can complete the Patient flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-021 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored

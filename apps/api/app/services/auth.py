@@ -193,7 +193,6 @@ class AuthService:
         )
         return cls.issue_tokens(updated_user)
 
-
     @staticmethod
     async def authenticate_user(
         session: AsyncSession,

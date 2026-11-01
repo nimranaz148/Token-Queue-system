@@ -87,4 +87,3 @@ class StaffMembershipsResponse(BaseModel):
 
 class SwitchClinicRequest(BaseModel):
     clinic_id: uuid.UUID = Field(description="Target clinic ID to switch active context to")
-

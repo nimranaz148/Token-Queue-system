@@ -1,6 +1,6 @@
 import uuid
 from collections.abc import AsyncGenerator, Generator
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,9 +12,11 @@ from app.core.database import get_db
 from app.core.errors import AppException
 from app.core.security import create_access_token
 from app.main import app
+from app.models.clinic import ClinicSettings
 from app.models.doctor import Doctor, DoctorSchedule
 from app.models.patient import Patient
 from app.models.token import Token
+from app.models.visit import Visit
 from app.schemas.auth import CurrentUser, Role
 from app.services.token import TokenService
 
@@ -674,3 +676,99 @@ async def test_doctor_panel_queue_and_actions() -> None:
     assert tok_arrived.position < Decimal("2.00")  # placed before min
     session.commit.assert_awaited()
     mock_instance.broadcast_queue_update.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_doctor_ki_hidayat_shared_advice_f021() -> None:
+    """Test F-021 Doctor ki Hidayat: advice visible only if clinic setting ON and visit allows (<= 30 days)."""
+    session = AsyncMock(spec=AsyncSession)
+    clinic_id = uuid.uuid4()
+    doc_id = uuid.uuid4()
+    doctor = Doctor(id=doc_id, clinic_id=clinic_id, name="Dr. Tariq Khan", active=True)
+    token = Token(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        doctor_id=doc_id,
+        patient_id=uuid.uuid4(),
+        visit_date=date.today(),
+        number=19,
+        position=Decimal("19.00"),
+        source="online",
+        status="done",
+        public_code="hidayat-code-19",
+        created_at=datetime.now(UTC),
+    )
+
+    service = TokenService(session)
+
+    # 1. Clinic setting OFF -> returns unshared message "Clinic se rabta karein"
+    mock_tok_res = MagicMock()
+    mock_tok_res.first.return_value = (token, doctor)
+
+    mock_set_off = MagicMock()
+    mock_set_off.scalar_one_or_none.return_value = ClinicSettings(
+        clinic_id=clinic_id, share_advice_with_patient=False
+    )
+
+    session.execute = AsyncMock(side_effect=[mock_tok_res, mock_set_off])
+
+    res_off = await service.get_shared_visit_advice("hidayat-code-19")
+    assert res_off.shared is False
+    assert res_off.message == "Clinic se rabta karein"
+    assert res_off.medicines_advice is None
+
+    # 2. Clinic setting ON and Visit share_with_patient = True and <= 30 days old
+    mock_tok_res2 = MagicMock()
+    mock_tok_res2.first.return_value = (token, doctor)
+
+    mock_set_on = MagicMock()
+    mock_set_on.scalar_one_or_none.return_value = ClinicSettings(
+        clinic_id=clinic_id, share_advice_with_patient=True
+    )
+
+    visit = Visit(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        patient_id=token.patient_id,
+        doctor_id=doc_id,
+        token_id=token.id,
+        complaint="Private: Sore throat",
+        notes="Private: Mild pharyngitis",
+        medicines_advice="Tab Azomax 500mg OD for 3 days, Gargles TDS",
+        share_with_patient=True,
+        created_at=datetime.now(UTC) - timedelta(days=2),
+    )
+    mock_vis = MagicMock()
+    mock_vis.scalar_one_or_none.return_value = visit
+
+    session.execute = AsyncMock(side_effect=[mock_tok_res2, mock_set_on, mock_vis])
+
+    res_on = await service.get_shared_visit_advice("hidayat-code-19")
+    assert res_on.shared is True
+    assert res_on.doctor_name == "Dr. Tariq Khan"
+    assert res_on.medicines_advice == "Tab Azomax 500mg OD for 3 days, Gargles TDS"
+    # Security: Ensure notes and complaint are never present in model
+    assert not hasattr(res_on, "notes")
+    assert not hasattr(res_on, "complaint")
+
+    # 3. Visit older than 30 days -> returns unshared message
+    old_visit = Visit(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        patient_id=token.patient_id,
+        doctor_id=doc_id,
+        token_id=token.id,
+        medicines_advice="Expired advice",
+        share_with_patient=True,
+        created_at=datetime.now(UTC) - timedelta(days=35),
+    )
+    mock_tok_res3 = MagicMock()
+    mock_tok_res3.first.return_value = (token, doctor)
+    mock_vis_old = MagicMock()
+    mock_vis_old.scalar_one_or_none.return_value = old_visit
+
+    session.execute = AsyncMock(side_effect=[mock_tok_res3, mock_set_on, mock_vis_old])
+
+    res_old = await service.get_shared_visit_advice("hidayat-code-19")
+    assert res_old.shared is False
+    assert res_old.message == "Clinic se rabta karein"

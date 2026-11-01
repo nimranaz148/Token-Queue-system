@@ -33,6 +33,7 @@ from app.schemas.token import (
     PublicDoctorInfo,
     PublicDoctorSchedule,
     ReceptionTokenListItem,
+    SharedVisitAdviceResponse,
     TokenBookingRequest,
     TokenBookingResponse,
     TokenCancelResponse,
@@ -1128,9 +1129,7 @@ class TokenService:
             return doctor_id
 
         doc_stmt = (
-            select(Doctor.id)
-            .where(Doctor.clinic_id == clinic_id, Doctor.active.is_(True))
-            .limit(1)
+            select(Doctor.id).where(Doctor.clinic_id == clinic_id, Doctor.active.is_(True)).limit(1)
         )
         res = await self.session.execute(doc_stmt)
         first_doc = res.scalar_one_or_none()
@@ -1367,7 +1366,9 @@ class TokenService:
             session=self.session,
             action=AuditAction.TOKEN_NEXT,
             entity="token",
-            entity_id=next_token_dto.id if next_token_dto else (prev_token_dto.id if prev_token_dto else None),
+            entity_id=next_token_dto.id
+            if next_token_dto
+            else (prev_token_dto.id if prev_token_dto else None),
             actor_type="staff",
             actor_id=current_user.user_id,
             clinic_id=clinic_id,
@@ -1435,7 +1436,9 @@ class TokenService:
         row = res.first()
 
         if not row:
-            raise bad_request(code="NO_ACTIVE_PATIENT", detail="No patient is currently being served.")
+            raise bad_request(
+                code="NO_ACTIVE_PATIENT", detail="No patient is currently being served."
+            )
 
         token, patient = row
         token.status = "skipped"
@@ -1540,7 +1543,9 @@ class TokenService:
         row = res.first()
 
         if not row:
-            raise bad_request(code="NO_ACTIVE_PATIENT", detail="No patient is currently being served.")
+            raise bad_request(
+                code="NO_ACTIVE_PATIENT", detail="No patient is currently being served."
+            )
 
         token, patient = row
         token.status = "hold"
@@ -1667,7 +1672,9 @@ class TokenService:
         pos_res = await self.session.execute(pos_stmt)
         min_pos = pos_res.scalar_one_or_none()
 
-        new_pos = Decimal(str(min_pos - Decimal("1.00"))) if min_pos is not None else Decimal("0.50")
+        new_pos = (
+            Decimal(str(min_pos - Decimal("1.00"))) if min_pos is not None else Decimal("0.50")
+        )
         token.status = "arrived"
         token.position = new_pos
         token.cancelled_reason = None
@@ -1739,4 +1746,65 @@ class TokenService:
             current_token=token_dto,
             already_advanced=False,
             message=f"Patient #{token.number} recalled to front of queue.",
+        )
+
+    # -------------------------------------------------------------------------
+    # Doctor ki Hidayat (PRD §5.3 F-021)
+    # -------------------------------------------------------------------------
+
+    async def get_shared_visit_advice(
+        self,
+        public_code: str,
+    ) -> SharedVisitAdviceResponse:
+        """Retrieve patient prescription advice if clinic sharing and visit sharing allow (F-021)."""
+        stmt = (
+            select(Token, Doctor)
+            .join(Doctor, Token.doctor_id == Doctor.id)
+            .where(Token.public_code == public_code)
+        )
+        res = await self.session.execute(stmt)
+        row = res.first()
+        if not row:
+            raise not_found(code="TOKEN_NOT_FOUND", detail="Token with specified public code not found.")
+
+        token, doctor = row
+
+        # Check clinic setting
+        set_stmt = select(ClinicSettings).where(ClinicSettings.clinic_id == token.clinic_id)
+        set_res = await self.session.execute(set_stmt)
+        settings = set_res.scalar_one_or_none()
+
+        default_unshared = SharedVisitAdviceResponse(
+            shared=False,
+            public_code=public_code,
+            token_number=token.number,
+            message="Clinic se rabta karein",
+        )
+
+        if not settings or not settings.share_advice_with_patient:
+            return default_unshared
+
+        # Check visit record
+        v_stmt = select(Visit).where(
+            Visit.clinic_id == token.clinic_id,
+            Visit.token_id == token.id,
+        )
+        v_res = await self.session.execute(v_stmt)
+        visit = v_res.scalar_one_or_none()
+
+        if not visit or not visit.share_with_patient:
+            return default_unshared
+
+        # Check <= 30 days old rule (PRD §5.3 F-021)
+        now = datetime.now(UTC)
+        if (now - visit.created_at) > timedelta(days=30):
+            return default_unshared
+
+        return SharedVisitAdviceResponse(
+            shared=True,
+            public_code=public_code,
+            token_number=token.number,
+            visit_date=token.visit_date,
+            doctor_name=doctor.name,
+            medicines_advice=visit.medicines_advice,
         )

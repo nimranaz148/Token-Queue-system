@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 class SupabaseAuthError(Exception):
     """Base exception for Supabase Auth integration failures."""
 
-    def __init__(self, message: str, status_code: int = 500, error_code: str = "AUTH_ERROR") -> None:
+    def __init__(
+        self, message: str, status_code: int = 500, error_code: str = "AUTH_ERROR"
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
@@ -89,7 +91,9 @@ class SupabaseAuthClient:
             if idempotency_key in self._processed_deliveries:
                 expiry = self._processed_deliveries[idempotency_key]
                 if now < expiry:
-                    logger.info("Duplicate magic link delivery suppressed for key %s", idempotency_key)
+                    logger.info(
+                        "Duplicate magic link delivery suppressed for key %s", idempotency_key
+                    )
                     return {"status": "duplicate_suppressed", "email": email}
 
         url = f"{self.base_url}/auth/v1/magiclink"
@@ -111,8 +115,17 @@ class SupabaseAuthClient:
             raise SupabaseAuthRateLimitError(response.text or "Rate limit exceeded")
 
         if response.status_code >= 400:
-            error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
-            msg = error_data.get("msg") or error_data.get("message") or response.text or f"HTTP {response.status_code}"
+            error_data = (
+                response.json()
+                if response.headers.get("content-type", "").startswith("application/json")
+                else {}
+            )
+            msg = (
+                error_data.get("msg")
+                or error_data.get("message")
+                or response.text
+                or f"HTTP {response.status_code}"
+            )
             logger.error("Supabase Auth error %d: %s", response.status_code, msg)
             raise SupabaseAuthError(message=msg, status_code=response.status_code)
 
@@ -124,7 +137,11 @@ class SupabaseAuthClient:
     async def get_jwks(self, force_refresh: bool = False) -> dict[str, Any]:
         """Fetch JWKS keys with 10-minute caching (PRD §13.3)."""
         now = time.time()
-        if not force_refresh and self._jwks_cache and (now - self._jwks_cached_at < self._jwks_ttl_seconds):
+        if (
+            not force_refresh
+            and self._jwks_cache
+            and (now - self._jwks_cached_at < self._jwks_ttl_seconds)
+        ):
             return self._jwks_cache
 
         url = f"{self.base_url}/auth/v1/.well-known/jwks.json"
@@ -132,7 +149,9 @@ class SupabaseAuthClient:
             try:
                 res = await client.get(url, headers={"apikey": self.service_role_key or "anon"})
                 if res.status_code != 200:
-                    raise SupabaseAuthError(f"Failed to fetch JWKS: HTTP {res.status_code}", status_code=res.status_code)
+                    raise SupabaseAuthError(
+                        f"Failed to fetch JWKS: HTTP {res.status_code}", status_code=res.status_code
+                    )
                 self._jwks_cache = res.json()
                 self._jwks_cached_at = now
                 return self._jwks_cache
@@ -152,6 +171,10 @@ class SupabaseAuthClient:
             )
             return payload
         except jwt.ExpiredSignatureError as exc:
-            raise SupabaseAuthError("Session expired, please login again", status_code=401, error_code="TOKEN_EXPIRED") from exc
+            raise SupabaseAuthError(
+                "Session expired, please login again", status_code=401, error_code="TOKEN_EXPIRED"
+            ) from exc
         except jwt.InvalidTokenError as exc:
-            raise SupabaseAuthError("Invalid session token", status_code=401, error_code="INVALID_TOKEN") from exc
+            raise SupabaseAuthError(
+                "Invalid session token", status_code=401, error_code="INVALID_TOKEN"
+            ) from exc

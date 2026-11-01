@@ -94,9 +94,7 @@ def test_failed_request_traceable_to_log_line(log_capture: InMemoryLogHandler) -
 
     # Find the matching log lines by response id
     matching_logs = [
-        entry
-        for entry in log_capture.formatted_entries
-        if f'"{header_req_id}"' in entry
+        entry for entry in log_capture.formatted_entries if f'"{header_req_id}"' in entry
     ]
     assert len(matching_logs) > 0
 

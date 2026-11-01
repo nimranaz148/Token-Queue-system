@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.core.permissions import allow_public
 from app.schemas.token import (
     PublicClinicInfoResponse,
+    SharedVisitAdviceResponse,
     TokenBookingRequest,
     TokenBookingResponse,
     TokenCancelResponse,
@@ -89,3 +90,18 @@ async def cancel_token(
         client_ip=client_ip,
         request_id=idempotency_key,
     )
+
+
+@router.get(
+    "/tokens/{public_code}/advice",
+    response_model=SharedVisitAdviceResponse,
+    dependencies=[Depends(allow_public)],
+    status_code=status.HTTP_200_OK,
+)
+async def get_shared_visit_advice(
+    public_code: str,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> SharedVisitAdviceResponse:
+    """Retrieve shared doctor prescription advice if clinic and visit sharing are enabled (F-021)."""
+    service = TokenService(session)
+    return await service.get_shared_visit_advice(public_code=public_code)

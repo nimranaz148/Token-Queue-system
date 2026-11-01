@@ -13,11 +13,19 @@ class MemberRole(StrEnum):
 
 
 class MemberInviteRequest(BaseModel):
-    name: Annotated[str, Field(min_length=2, max_length=255, description="Full name of staff member")]
+    name: Annotated[
+        str, Field(min_length=2, max_length=255, description="Full name of staff member")
+    ]
     email: Annotated[EmailStr, Field(description="Unique email address for staff login")]
-    phone: Annotated[str | None, Field(default=None, max_length=50, description="Contact phone in E.164 or local format")]
+    phone: Annotated[
+        str | None,
+        Field(default=None, max_length=50, description="Contact phone in E.164 or local format"),
+    ]
     role: Annotated[MemberRole, Field(description="Role: owner, doctor, or reception")]
-    doctor_id: Annotated[uuid.UUID | None, Field(default=None, description="Linked doctor ID (required if role is doctor)")]
+    doctor_id: Annotated[
+        uuid.UUID | None,
+        Field(default=None, description="Linked doctor ID (required if role is doctor)"),
+    ]
 
 
 class MemberUpdateRequest(BaseModel):

@@ -193,7 +193,9 @@ class MemberService:
 
             # Validate doctor link if role is or became doctor
             if member.role == MemberRole.DOCTOR.value:
-                target_doctor_id = data.doctor_id if data.doctor_id is not None else member.doctor_id
+                target_doctor_id = (
+                    data.doctor_id if data.doctor_id is not None else member.doctor_id
+                )
                 if not target_doctor_id:
                     raise unprocessable_entity(
                         code="DOCTOR_ID_REQUIRED",

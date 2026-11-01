@@ -69,9 +69,7 @@ class PatientChatAgent:
             "Never give medical advice. Keep answers short and clear."
         )
 
-        messages: list[AgentMessage] = [
-            AgentMessage(role="system", content=system_prompt)
-        ]
+        messages: list[AgentMessage] = [AgentMessage(role="system", content=system_prompt)]
         if conversation_history:
             messages.extend(conversation_history[-4:])  # recent context only
         messages.append(AgentMessage(role="user", content=sanitized_input))
@@ -125,8 +123,7 @@ class PatientChatAgent:
         )
 
         final_text = (
-            completion.content
-            or "Aapka token status check kar liya gaya hai."
+            completion.content or "Aapka token status check kar liya gaya hai."
             if not completion.error
             else "Maazrat, system abhi masroof hai."
         )

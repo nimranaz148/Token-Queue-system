@@ -333,4 +333,3 @@ def test_doctor_error_format_contract_rfc7807(mock_db: AsyncMock) -> None:
     err_404 = res_404.json()
     assert err_404["code"] == "DOCTOR_NOT_FOUND"
     assert "detail" in err_404
-

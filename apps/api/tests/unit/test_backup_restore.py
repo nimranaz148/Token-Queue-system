@@ -35,7 +35,9 @@ def seed_database(session: Session) -> tuple[uuid.UUID, uuid.UUID]:
     with tenant_scope(None, bypass=True):
         clinic = Clinic(id=clinic_id, name="Shifa Recovery Test", slug="shifa-restore")
         doctor = Doctor(id=doctor_id, clinic_id=clinic_id, name="Dr. Restore", active=True)
-        patient = Patient(id=patient_id, clinic_id=clinic_id, name="Patient Test", phone="03001234567")
+        patient = Patient(
+            id=patient_id, clinic_id=clinic_id, name="Patient Test", phone="03001234567"
+        )
         token = Token(
             id=token_id,
             clinic_id=clinic_id,

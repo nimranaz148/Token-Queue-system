@@ -22,7 +22,9 @@ class VendorSandboxManager:
 
     @classmethod
     def get_turnstile_secret(cls) -> str:
-        return os.environ.get("CLOUDFLARE_TURNSTILE_SECRET_KEY") or CLOUDFLARE_TURNSTILE_DUMMY_SECRET
+        return (
+            os.environ.get("CLOUDFLARE_TURNSTILE_SECRET_KEY") or CLOUDFLARE_TURNSTILE_DUMMY_SECRET
+        )
 
     @classmethod
     async def verify_turnstile_sandbox(cls, token: str = "XXXX.DUMMY.TOKEN.XXXX") -> dict[str, Any]:

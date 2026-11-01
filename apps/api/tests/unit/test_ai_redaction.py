@@ -46,9 +46,7 @@ async def test_trace_contains_no_personal_data_from_fixtures(
     fixture_phone = "+92 300 1234567"
     fixture_email = "usman.tariq@gmail.com"
     fixture_cnic = "35201-1234567-1"
-    fixture_medical_notes = (
-        "Patient diagnosed with Type-2 diabetes and acute hypertension. Prescribed Metformin 500mg BD."
-    )
+    fixture_medical_notes = "Patient diagnosed with Type-2 diabetes and acute hypertension. Prescribed Metformin 500mg BD."
 
     mock_service = AsyncMock()
     mock_service.save_wait_prediction.return_value = {
@@ -112,15 +110,9 @@ async def test_trace_contains_no_personal_data_from_fixtures(
     assert fixture_email not in trace_json_str, (
         f"Email address '{fixture_email}' was not redacted from trace"
     )
-    assert fixture_cnic not in trace_json_str, (
-        f"CNIC '{fixture_cnic}' was not redacted from trace"
-    )
-    assert "Type-2 diabetes" not in trace_json_str, (
-        "Medical diagnosis was not redacted from trace"
-    )
-    assert "Metformin" not in trace_json_str, (
-        "Prescription details were not redacted from trace"
-    )
+    assert fixture_cnic not in trace_json_str, f"CNIC '{fixture_cnic}' was not redacted from trace"
+    assert "Type-2 diabetes" not in trace_json_str, "Medical diagnosis was not redacted from trace"
+    assert "Metformin" not in trace_json_str, "Prescription details were not redacted from trace"
 
     # Verify that redaction tokens are correctly placed in the trace
     assert "[PHONE_MASKED]" in trace_json_str or "[PHONE_REDACTED]" in trace_json_str

@@ -22,9 +22,7 @@ class KillSwitchManager:
         self.feature_kill_switches: dict[str, str] = {}
         self.clinic_kill_switches: dict[uuid.UUID, str] = {}
 
-    def activate_global(
-        self, reason: str = "Emergency AI service kill switch activated."
-    ) -> None:
+    def activate_global(self, reason: str = "Emergency AI service kill switch activated.") -> None:
         self.global_killed = True
         self.global_kill_reason = reason
 
@@ -212,7 +210,9 @@ def mask_pii_for_ai(data: dict[str, Any]) -> dict[str, Any]:
             sanitized[key] = mask_pii_for_ai(value)
         elif isinstance(value, list):
             sanitized[key] = [
-                mask_pii_for_ai(item) if isinstance(item, dict) else (redact_pii_text(item) if isinstance(item, str) else item)
+                mask_pii_for_ai(item)
+                if isinstance(item, dict)
+                else (redact_pii_text(item) if isinstance(item, str) else item)
                 for item in value
             ]
         else:

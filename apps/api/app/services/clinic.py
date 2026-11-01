@@ -107,7 +107,11 @@ class ClinicService:
             actor_type="platform_admin" if created_by else "system",
             actor_id=created_by,
             clinic_id=clinic.id,
-            after={"email": owner_member.email, "role": owner_member.role, "name": owner_member.name},
+            after={
+                "email": owner_member.email,
+                "role": owner_member.role,
+                "name": owner_member.name,
+            },
             client_ip=ip_address,
         )
 
@@ -157,7 +161,9 @@ class ClinicService:
 
         if search:
             pattern = f"%{search.strip().lower()}%"
-            filter_clause = func.lower(Clinic.name).like(pattern) | func.lower(Clinic.slug).like(pattern)
+            filter_clause = func.lower(Clinic.name).like(pattern) | func.lower(Clinic.slug).like(
+                pattern
+            )
             query = query.where(filter_clause)
             count_query = count_query.where(filter_clause)
 

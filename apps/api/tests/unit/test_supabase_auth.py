@@ -43,7 +43,10 @@ async def test_supabase_auth_happy_path(auth_client: SupabaseAuthClient) -> None
         mock_post.assert_called_once()
         call_kwargs = mock_post.call_args[1]
         assert call_kwargs["json"]["email"] == "doctor@example.com"
-        assert call_kwargs["json"]["options"]["email_redirect_to"] == "https://app.clinic.com/dashboard"
+        assert (
+            call_kwargs["json"]["options"]["email_redirect_to"]
+            == "https://app.clinic.com/dashboard"
+        )
         assert call_kwargs["headers"]["apikey"] == "test-service-key"
         assert "Bearer test-service-key" in call_kwargs["headers"]["Authorization"]
 

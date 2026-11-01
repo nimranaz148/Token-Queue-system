@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 class SentryIntegrationError(Exception):
     """Exception for Sentry delivery failures."""
 
-    def __init__(self, message: str, status_code: int = 500, error_code: str = "SENTRY_ERROR") -> None:
+    def __init__(
+        self, message: str, status_code: int = 500, error_code: str = "SENTRY_ERROR"
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
@@ -181,9 +183,15 @@ class SentryClient:
                 return {"status": "rate_limited_buffered", "event_id": event_id}
 
             if res.status_code >= 400:
-                logger.warning("Sentry API returned error %d: %s; buffered locally.", res.status_code, res.text)
+                logger.warning(
+                    "Sentry API returned error %d: %s; buffered locally.", res.status_code, res.text
+                )
                 self._local_buffer.append(payload)
-                return {"status": "error_buffered", "event_id": event_id, "status_code": res.status_code}
+                return {
+                    "status": "error_buffered",
+                    "event_id": event_id,
+                    "status_code": res.status_code,
+                }
 
             if idempotency_key:
                 self._processed_events[idempotency_key] = now + 900.0

@@ -12,7 +12,9 @@ def test_vendor_integrations_skill_cites_documentation_and_date() -> None:
 
     # Assert required vendor documentation URLs
     assert "https://supabase.com/docs/guides/auth" in content
-    assert "https://developers.cloudflare.com/turnstile/get-started/server-side-validation/" in content
+    assert (
+        "https://developers.cloudflare.com/turnstile/get-started/server-side-validation/" in content
+    )
     assert "https://docs.sentry.io/platforms/python/guides/fastapi/" in content
     assert "https://supabase.com/docs/guides/realtime" in content
 

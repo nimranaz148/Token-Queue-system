@@ -47,7 +47,9 @@ def test_ai_module_has_zero_database_imports() -> None:
                 if node.module:
                     for forbidden in FORBIDDEN_MODULES:
                         if node.module == forbidden or node.module.startswith(f"{forbidden}."):
-                            violations.append(f"{rel_path}:{node.lineno} imports from '{node.module}'")
+                            violations.append(
+                                f"{rel_path}:{node.lineno} imports from '{node.module}'"
+                            )
 
             elif isinstance(node, ast.Attribute):
                 if node.attr in FORBIDDEN_ATTRIBUTES:
@@ -56,8 +58,7 @@ def test_ai_module_has_zero_database_imports() -> None:
                     )
 
     assert not violations, (
-        f"AI isolation architecture violations found ({len(violations)}):\n"
-        + "\n".join(violations)
+        f"AI isolation architecture violations found ({len(violations)}):\n" + "\n".join(violations)
     )
 
 

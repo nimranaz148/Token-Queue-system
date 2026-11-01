@@ -46,13 +46,7 @@ class DoctorService:
         total = count_res.scalar() or 0
 
         # Paginated items query
-        stmt = (
-            select(Doctor)
-            .where(*base_filter)
-            .order_by(Doctor.name)
-            .limit(limit)
-            .offset(offset)
-        )
+        stmt = select(Doctor).where(*base_filter).order_by(Doctor.name).limit(limit).offset(offset)
         res = await self.session.execute(stmt)
         doctors = res.scalars().all()
 

@@ -165,9 +165,7 @@ async def cancel_token(
 # -----------------------------------------------------------------------------
 
 
-@router.get(
-    "/doctor/queue", response_model=DoctorQueueResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/doctor/queue", response_model=DoctorQueueResponse, status_code=status.HTTP_200_OK)
 async def get_doctor_queue(
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_db)],

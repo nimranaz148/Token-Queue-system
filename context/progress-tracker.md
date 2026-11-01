@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
-**Last completed:** 50 Aaj ki List — F-004 (Reception; list; P0; roles: reception, owner, doctor (own))
-**In progress:** 51 Walk-in Entry — F-005 (Reception; transaction; P0; roles: reception, owner)
-**Next:** 52 Patient Search & Profile — F-006 (Reception; list; P1; roles: reception, owner, doctor)
+**Last completed:** 57 Doctor ki Hidayat (shared visit advice) — F-021
+**In progress:** Day Close Job (W-006) & Phase 2 Gate Check
+**Next:** Phase 3 — Owner (Task 58 Roz ki Report F-010 / D-001)
 **Blockers:** None
 
 ---
@@ -79,7 +79,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 54 Patient History & Visit Note
 - [x] 55 TV Screen
 - [x] 56 Display Device Pairing
-- [ ] 57 Doctor ki Hidayat (shared visit advice)
+- [x] 57 Doctor ki Hidayat (shared visit advice)
 
 ## Phase 3 — Owner (weeks 8-9): F-010/D-001, F-011, R-001..R-004, D-002, pilot hardening, backups + restore test
 

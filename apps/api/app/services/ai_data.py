@@ -186,7 +186,9 @@ class AIDataService:
             ]
             if past_waits and target_stat.avg_wait_minutes is not None:
                 avg_past_wait: Decimal = sum(past_waits, Decimal("0.0")) / Decimal(len(past_waits))
-                if avg_past_wait > Decimal("0.0") and target_stat.avg_wait_minutes > (Decimal("1.5") * avg_past_wait):
+                if avg_past_wait > Decimal("0.0") and target_stat.avg_wait_minutes > (
+                    Decimal("1.5") * avg_past_wait
+                ):
                     anomalies.append(
                         {
                             "type": "EXCESSIVE_WAIT_TIME",

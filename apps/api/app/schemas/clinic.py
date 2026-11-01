@@ -75,7 +75,9 @@ class ClinicUpdate(BaseModel):
 
 class ClinicStatusUpdate(BaseModel):
     status: str = Field(..., description="Target status: trial, active, or suspended")
-    reason: str = Field(..., min_length=3, max_length=255, description="Audited reason for status change")
+    reason: str = Field(
+        ..., min_length=3, max_length=255, description="Audited reason for status change"
+    )
 
     @field_validator("status")
     @classmethod
@@ -97,8 +99,6 @@ class ClinicResponse(ClinicBase):
     doctors_count: int = Field(default=0, description="Active doctors count in clinic")
     tokens_last_7d: int = Field(default=0, description="Tokens generated in last 7 days")
     created_at: datetime
-
-
 
 
 class ClinicListResponse(BaseModel):

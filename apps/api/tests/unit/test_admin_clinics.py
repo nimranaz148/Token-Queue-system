@@ -15,7 +15,9 @@ from app.schemas.auth import Role
 client = TestClient(app)
 
 
-def make_auth_headers(role: str, is_admin: bool = False, clinic_id: uuid.UUID | None = None) -> dict[str, str]:
+def make_auth_headers(
+    role: str, is_admin: bool = False, clinic_id: uuid.UUID | None = None
+) -> dict[str, str]:
     token = create_access_token(
         {
             "sub": str(uuid.uuid4()),
@@ -275,4 +277,3 @@ def test_create_clinic_onboarding_stores_settings_and_owner(admin_mock_db: Async
     assert "Clinic" in types_added
     assert "ClinicSettings" in types_added
     assert "ClinicMember" in types_added
-

@@ -264,3 +264,15 @@ class DoctorNextActionResponse(BaseModel):
     current_token: DoctorQueueToken | None = None
     already_advanced: bool = False
     message: str
+
+
+class SharedVisitAdviceResponse(BaseModel):
+    """Doctor ki Hidayat patient prescription report (PRD §5.3 F-021)."""
+
+    shared: bool
+    public_code: str
+    token_number: int | None = None
+    visit_date: date | None = None
+    doctor_name: str | None = None
+    medicines_advice: str | None = None
+    message: str | None = None

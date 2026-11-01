@@ -306,4 +306,3 @@ def test_switch_active_clinic() -> None:
     data = res.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
-
