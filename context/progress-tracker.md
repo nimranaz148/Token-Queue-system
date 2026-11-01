@@ -56,8 +56,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 34 Integration: Cloudflare Turnstile
 - [x] 35 First vertical slice through the UI, API and database [web-app pack]
 - [x] 36 Form pattern: validation, error display, double-submit protection [web-app pack]
-- [ ] 37 Accessibility and performance gates [web-app pack]
-- [ ] 37 Accessibility and performance gates [web-app pack]
+- [x] 37 Accessibility and performance gates [web-app pack]
 - [ ] 38 End-to-end smoke test of the critical flow [web-app pack]
 - [ ] 39 First vertical slice: one resource with create, read, update, dele…
 - [ ] 40 Tenant or branch scoping (if the PRD has it) [backend-api pack]

@@ -206,6 +206,7 @@ export default function LiveQueuePage(): React.ReactElement {
           <button
             type="button"
             role="switch"
+            aria-label="Browser queue reminder"
             aria-checked={reminderEnabled}
             onClick={handleReminderToggle}
             className={`w-10 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
