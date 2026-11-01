@@ -100,3 +100,8 @@ async def require_clinic_member(
         raise forbidden(code="FORBIDDEN", detail="User is not an active clinic staff member")
 
     return user
+
+
+async def allow_public() -> None:
+    """Explicit permission dependency declaring an open/public endpoint."""
+    return None

@@ -137,7 +137,7 @@ Each task: confirm the acceptance criteria (`/architect` turns them into failing
 
 Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2; limit reached closes booking; concurrency test passes
 
-- [ ] 29 Token Booking — F-001 (Patient; transaction; P0; roles: public)
+- [x] 29 Token Booking — F-001 (Patient; transaction; P0; roles: public)
   - Acceptance: A user with one of the roles (public) can complete the Patient flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-001 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored

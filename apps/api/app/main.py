@@ -7,6 +7,7 @@ from app.routers.admin_clinics import router as admin_clinics_router
 from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
 from app.routers.members import router as members_router
+from app.routers.public_tokens import router as public_tokens_router
 
 app = FastAPI(
     title="Clinic Token & Queue SaaS API",
@@ -31,6 +32,7 @@ app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(admin_clinics_router, prefix="/api/v1")
 app.include_router(members_router, prefix="/api/v1")
+app.include_router(public_tokens_router, prefix="/api/v1")
 
 
 @app.get("/")

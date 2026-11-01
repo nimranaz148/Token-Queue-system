@@ -60,23 +60,42 @@ def forbidden(code: str = "FORBIDDEN", detail: str = "Access forbidden") -> AppE
     return AppException(status_code=403, code=code, detail=detail, title="Forbidden")
 
 
-def not_found(code: str = "NOT_FOUND", detail: str = "Resource not found") -> AppException:
-    return AppException(status_code=404, code=code, detail=detail, title="Not Found")
+def not_found(
+    code: str = "NOT_FOUND",
+    detail: str = "Resource not found",
+    extra: dict[str, Any] | None = None,
+) -> AppException:
+    return AppException(status_code=404, code=code, detail=detail, title="Not Found", extra=extra)
 
 
-def bad_request(code: str = "BAD_REQUEST", detail: str = "Invalid request") -> AppException:
-    return AppException(status_code=400, code=code, detail=detail, title="Bad Request")
+def bad_request(
+    code: str = "BAD_REQUEST",
+    detail: str = "Invalid request",
+    extra: dict[str, Any] | None = None,
+) -> AppException:
+    return AppException(status_code=400, code=code, detail=detail, title="Bad Request", extra=extra)
 
 
-def conflict(code: str = "CONFLICT", detail: str = "Resource conflict") -> AppException:
-    return AppException(status_code=409, code=code, detail=detail, title="Conflict")
+def conflict(
+    code: str = "CONFLICT",
+    detail: str = "Resource conflict",
+    extra: dict[str, Any] | None = None,
+) -> AppException:
+    return AppException(status_code=409, code=code, detail=detail, title="Conflict", extra=extra)
 
 
 def unprocessable_entity(
     code: str = "UNPROCESSABLE_ENTITY",
     detail: str = "Validation failed",
+    extra: dict[str, Any] | None = None,
 ) -> AppException:
-    return AppException(status_code=422, code=code, detail=detail, title="Unprocessable Entity")
+    return AppException(
+        status_code=422,
+        code=code,
+        detail=detail,
+        title="Unprocessable Entity",
+        extra=extra,
+    )
 
 
 def too_many_requests(

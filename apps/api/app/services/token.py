@@ -1,0 +1,367 @@
+import logging
+import secrets
+import uuid
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.errors import (
+    conflict,
+    forbidden,
+    not_found,
+    unprocessable_entity,
+)
+from app.core.phone import normalize_phone
+from app.integrations.turnstile import TurnstileService
+from app.models.clinic import Clinic, ClinicSettings
+from app.models.doctor import Doctor, DoctorSchedule
+from app.models.patient import Patient
+from app.models.token import Token, TokenCounter, TokenEvent
+from app.schemas.token import (
+    PublicClinicInfoResponse,
+    PublicDoctorInfo,
+    PublicDoctorSchedule,
+    TokenBookingRequest,
+    TokenBookingResponse,
+)
+from app.services.audit import AuditService
+
+logger = logging.getLogger(__name__)
+
+
+class TokenService:
+    """Domain service for patient token issuance, queue progression, and lifecycle management."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def get_public_clinic_info(self, slug: str) -> PublicClinicInfoResponse:
+        """Retrieve public clinic profile, OPD doctors, and schedules (PRD §5.3 F-001)."""
+        clinic_stmt = select(Clinic).where(Clinic.slug == slug)
+        res = await self.session.execute(clinic_stmt)
+        clinic = res.scalar_one_or_none()
+        if not clinic:
+            raise not_found(code="CLINIC_NOT_FOUND", detail=f"Clinic with slug '{slug}' not found")
+
+        if clinic.status == "suspended":
+            raise forbidden(code="CLINIC_SUSPENDED", detail="This clinic is currently suspended.")
+
+        # Settings
+        settings_stmt = select(ClinicSettings).where(ClinicSettings.clinic_id == clinic.id)
+        settings_res = await self.session.execute(settings_stmt)
+        clinic_settings = settings_res.scalar_one_or_none()
+        online_booking_enabled = (
+            clinic_settings.online_booking_enabled if clinic_settings else True
+        )
+
+        # Doctors
+        docs_stmt = (
+            select(Doctor)
+            .where(
+                Doctor.clinic_id == clinic.id,
+                Doctor.active.is_(True),
+                Doctor.deleted_at.is_(None),
+            )
+            .order_by(Doctor.name)
+        )
+        docs_res = await self.session.execute(docs_stmt)
+        doctors = docs_res.scalars().all()
+
+        public_doctors: list[PublicDoctorInfo] = []
+        for doc in doctors:
+            sched_stmt = (
+                select(DoctorSchedule)
+                .where(DoctorSchedule.doctor_id == doc.id)
+                .order_by(DoctorSchedule.weekday, DoctorSchedule.start_time)
+            )
+            sched_res = await self.session.execute(sched_stmt)
+            schedules = sched_res.scalars().all()
+
+            public_doctors.append(
+                PublicDoctorInfo(
+                    id=doc.id,
+                    name=doc.name,
+                    specialty=doc.specialty,
+                    daily_online_limit=doc.daily_online_limit,
+                    consult_minutes=doc.consult_minutes,
+                    schedules=[
+                        PublicDoctorSchedule(
+                            weekday=s.weekday,
+                            start_time=s.start_time.strftime("%H:%M"),
+                            end_time=s.end_time.strftime("%H:%M"),
+                        )
+                        for s in schedules
+                    ],
+                )
+            )
+
+        return PublicClinicInfoResponse(
+            id=clinic.id,
+            name=clinic.name,
+            slug=clinic.slug,
+            time_zone=clinic.time_zone,
+            address=clinic.address,
+            phone=clinic.phone,
+            online_booking_enabled=online_booking_enabled,
+            doctors=public_doctors,
+        )
+
+    async def book_token(
+        self,
+        slug: str,
+        payload: TokenBookingRequest,
+        client_ip: str | None = None,
+        request_id: str | None = None,
+    ) -> TokenBookingResponse:
+        """Issue an online token for an OPD visit inside an atomic transaction (F-001, W-001).
+
+        Guarantees:
+        - Turnstile anti-bot verification.
+        - E.164 phone normalisation.
+        - Doctor daily online limit check (409 DAILY_LIMIT_REACHED).
+        - Active duplicate check (409 ACTIVE_TOKEN_EXISTS with existing link).
+        - Sequential token numbering via row lock on token_counters.
+        - TokenEvent + Audit log creation.
+        """
+        # 1. Turnstile anti-abuse check
+        await TurnstileService.verify_token(payload.turnstile_token, client_ip=client_ip)
+
+        # 2. Clinic lookup and status check
+        clinic_stmt = select(Clinic).where(Clinic.slug == slug)
+        clinic_res = await self.session.execute(clinic_stmt)
+        clinic = clinic_res.scalar_one_or_none()
+        if not clinic:
+            raise not_found(code="CLINIC_NOT_FOUND", detail=f"Clinic with slug '{slug}' not found")
+
+        if clinic.status == "suspended":
+            raise forbidden(code="CLINIC_SUSPENDED", detail="This clinic is currently suspended.")
+
+        # 3. Clinic settings check (online booking enabled)
+        settings_stmt = select(ClinicSettings).where(ClinicSettings.clinic_id == clinic.id)
+        settings_res = await self.session.execute(settings_stmt)
+        clinic_settings = settings_res.scalar_one_or_none()
+        if clinic_settings and not clinic_settings.online_booking_enabled:
+            raise conflict(
+                code="BOOKING_CLOSED",
+                detail="Online booking is currently disabled for this clinic.",
+            )
+
+        # 4. Visit date validation (must be today or tomorrow)
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+        if payload.visit_date < today or payload.visit_date > tomorrow:
+            raise unprocessable_entity(
+                code="INVALID_VISIT_DATE",
+                detail=f"Booking is only allowed for today ({today}) or tomorrow ({tomorrow}).",
+            )
+
+        # 5. Doctor lookup and active status
+        doc_stmt = select(Doctor).where(
+            Doctor.id == payload.doctor_id,
+            Doctor.clinic_id == clinic.id,
+            Doctor.active.is_(True),
+            Doctor.deleted_at.is_(None),
+        )
+        doc_res = await self.session.execute(doc_stmt)
+        doctor = doc_res.scalar_one_or_none()
+        if not doctor:
+            raise not_found(
+                code="DOCTOR_NOT_FOUND",
+                detail="Selected doctor was not found or is currently inactive.",
+            )
+
+        # 6. Doctor schedule check for the chosen weekday
+        weekday = payload.visit_date.weekday()
+        sched_stmt = select(DoctorSchedule).where(
+            DoctorSchedule.doctor_id == doctor.id,
+            DoctorSchedule.weekday == weekday,
+        )
+        sched_res = await self.session.execute(sched_stmt)
+        schedule = sched_res.scalars().first()
+
+        # Check total schedules for this doctor
+        any_sched_stmt = select(func.count()).select_from(DoctorSchedule).where(DoctorSchedule.doctor_id == doctor.id)
+        total_scheds = (await self.session.execute(any_sched_stmt)).scalar() or 0
+        if total_scheds > 0 and schedule is None:
+            raise unprocessable_entity(
+                code="NO_OPD_SCHEDULE",
+                detail=f"Doctor {doctor.name} has no OPD schedule on {payload.visit_date.strftime('%A')}.",
+            )
+
+        # 7. Daily online limit check
+        if doctor.daily_online_limit is not None and doctor.daily_online_limit > 0:
+            count_stmt = (
+                select(func.count())
+                .select_from(Token)
+                .where(
+                    Token.clinic_id == clinic.id,
+                    Token.doctor_id == doctor.id,
+                    Token.visit_date == payload.visit_date,
+                    Token.source == "online",
+                    Token.status != "cancelled",
+                )
+            )
+            count_res = await self.session.execute(count_stmt)
+            active_count = count_res.scalar() or 0
+            if active_count >= doctor.daily_online_limit:
+                raise conflict(
+                    code="DAILY_LIMIT_REACHED",
+                    detail=f"Daily online booking limit ({doctor.daily_online_limit}) reached for Dr. {doctor.name}.",
+                )
+
+        # 8. Normalise phone to E.164
+        normalized_phone = normalize_phone(payload.phone)
+
+        # 9. Active duplicate check
+        pat_stmt = select(Patient).where(
+            Patient.clinic_id == clinic.id,
+            Patient.phone == normalized_phone,
+            Patient.deleted_at.is_(None),
+        )
+        pat_res = await self.session.execute(pat_stmt)
+        patient = pat_res.scalar_one_or_none()
+
+        if patient:
+            dup_stmt = select(Token).where(
+                Token.clinic_id == clinic.id,
+                Token.doctor_id == doctor.id,
+                Token.visit_date == payload.visit_date,
+                Token.patient_id == patient.id,
+                Token.status.in_(["booked", "arrived", "serving", "hold"]),
+            )
+            dup_res = await self.session.execute(dup_stmt)
+            existing_token = dup_res.scalar_one_or_none()
+            if existing_token:
+                raise conflict(
+                    code="ACTIVE_TOKEN_EXISTS",
+                    detail=f"An active token #{existing_token.number} already exists for this phone and doctor today.",
+                    extra={
+                        "existing_public_code": existing_token.public_code,
+                        "existing_token_url": f"/t/{existing_token.public_code}",
+                        "token_number": existing_token.number,
+                    },
+                )
+        else:
+            patient = Patient(
+                clinic_id=clinic.id,
+                phone=normalized_phone,
+                name=payload.patient_name.strip(),
+            )
+            self.session.add(patient)
+            await self.session.flush()
+
+        # Update patient name if changed
+        if patient.name != payload.patient_name.strip():
+            patient.name = payload.patient_name.strip()
+
+        # 10. Atomic sequence allocation via row lock on token_counters
+        # Check if counter row exists
+        counter_stmt = (
+            select(TokenCounter)
+            .where(
+                TokenCounter.clinic_id == clinic.id,
+                TokenCounter.doctor_id == doctor.id,
+                TokenCounter.visit_date == payload.visit_date,
+            )
+            .with_for_update()
+        )
+        counter_res = await self.session.execute(counter_stmt)
+        counter = counter_res.scalar_one_or_none()
+
+        if not counter:
+            counter = TokenCounter(
+                clinic_id=clinic.id,
+                doctor_id=doctor.id,
+                visit_date=payload.visit_date,
+                last_number=0,
+            )
+            self.session.add(counter)
+            await self.session.flush()
+            # Lock the newly added row
+            counter_res = await self.session.execute(counter_stmt)
+            counter = counter_res.scalar_one_or_none() or counter
+
+        new_number = counter.last_number + 1
+        counter.last_number = new_number
+
+        # 11. Generate public code and compute estimated time
+        public_code = secrets.token_urlsafe(16)
+        estimated_at: datetime | None = None
+        if schedule and schedule.start_time:
+            consult_mins = doctor.consult_minutes or 10
+            delay_mins = (new_number - 1) * consult_mins
+            base_time = datetime.combine(payload.visit_date, schedule.start_time, tzinfo=UTC)
+            estimated_at = base_time + timedelta(minutes=delay_mins)
+
+        # 12. Insert Token
+        now = datetime.now(UTC)
+        token = Token(
+            id=uuid.uuid4(),
+            clinic_id=clinic.id,
+            doctor_id=doctor.id,
+            patient_id=patient.id,
+            visit_date=payload.visit_date,
+            number=new_number,
+            position=Decimal(new_number),
+            source="online",
+            status="booked",
+            public_code=public_code,
+            estimated_at=estimated_at,
+            created_at=now,
+            updated_at=now,
+        )
+        self.session.add(token)
+        await self.session.flush()
+
+        # 13. Insert TokenEvent
+        token_event = TokenEvent(
+            token_id=token.id,
+            clinic_id=clinic.id,
+            from_status=None,
+            to_status="booked",
+            actor_type="patient",
+            actor_id=None,
+        )
+        self.session.add(token_event)
+
+        # 14. Record Audit Log
+        AuditService.record_audit(
+            session=self.session,
+            action="token.create",
+            entity="token",
+            entity_id=token.id,
+            actor_type="public",
+            actor_id=None,
+            clinic_id=clinic.id,
+            client_ip=client_ip,
+            request_id=request_id,
+            after={
+                "token_id": str(token.id),
+                "number": new_number,
+                "doctor_id": str(doctor.id),
+                "visit_date": str(payload.visit_date),
+                "source": "online",
+                "status": "booked",
+            },
+        )
+
+        await self.session.commit()
+        await self.session.refresh(token)
+
+        return TokenBookingResponse(
+            id=token.id,
+            number=token.number,
+            public_code=token.public_code,
+            status=token.status,
+            source=token.source,
+            visit_date=token.visit_date,
+            doctor_id=doctor.id,
+            doctor_name=doctor.name,
+            clinic_name=clinic.name,
+            clinic_slug=clinic.slug,
+            position=token.position,
+            estimated_at=token.estimated_at,
+            created_at=token.created_at,
+        )

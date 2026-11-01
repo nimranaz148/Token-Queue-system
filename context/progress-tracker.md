@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
-**Last completed:** 28 Integration skill: install an upstream one or generate a project-local one [integrations pack] (PHASE 0 COMPLETE!)
-**In progress:** 29 Token Booking — F-001 (Patient; transaction; P0; roles: public)
-**Next:** 30 Token Confirm — F-002
+**Last completed:** 29 Token Booking — F-001 (Patient; transaction; P0; roles: public)
+**In progress:** 30 Token Confirm — F-002 (Patient; transaction; P0; roles: public)
+**Next:** 31 Live Queue — F-003 (Patient; list; P0; roles: public)
 **Blockers:** None
 
 ---
@@ -48,7 +48,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 ## Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
 
-- [ ] 29 Token Booking
+- [x] 29 Token Booking
 - [ ] 30 Token Confirm
 - [ ] 31 Live Queue
 - [ ] 32 Doctor Management
