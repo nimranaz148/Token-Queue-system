@@ -173,7 +173,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
 - [x] 39 First vertical slice: one resource with create, read, update, delete [backend-api pack]
   - Acceptance: Validation, authorisation and pagination are tested
   - Acceptance: error format matches the contract
-- [ ] 40 Tenant or branch scoping (if the PRD has it) [backend-api pack]
+- [x] 40 Tenant or branch scoping (if the PRD has it) [backend-api pack]
   - Acceptance: A test proves tenant A cannot read or write tenant B
   - Acceptance: no tenant context returns nothing
 - [ ] 41 Structured logging, request ids and error reporting [backend-api pack]
