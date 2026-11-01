@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppException
 from app.models.clinic import Clinic, ClinicSettings
+from app.models.member import ClinicMember
 from app.schemas.audit import AuditAction
+from app.schemas.auth import Role
 from app.schemas.clinic import ClinicCreate
 from app.services.audit import AuditService
 
@@ -43,7 +45,7 @@ class ClinicService:
             time_zone=data.time_zone or "Asia/Karachi",
             address=data.address,
             phone=data.phone,
-            status="trial",
+            status=data.status or "trial",
             created_at=now,
             updated_at=now,
         )
@@ -65,7 +67,23 @@ class ClinicService:
         self.session.add(settings)
         await self.session.flush()
 
-        # Record immutable audit log
+        # Provision clinic owner in clinic_members (PRD §5.3 F-013)
+        owner_member = ClinicMember(
+            id=uuid.uuid4(),
+            clinic_id=clinic.id,
+            user_id=uuid.uuid4(),
+            name=data.owner_name,
+            email=str(data.owner_email),
+            phone=data.owner_phone,
+            role=Role.OWNER,
+            active=True,
+            created_at=now,
+            updated_at=now,
+        )
+        self.session.add(owner_member)
+        await self.session.flush()
+
+        # Record immutable audit logs (PRD §14.1)
         AuditService.record_audit(
             session=self.session,
             action=AuditAction.CLINIC_CREATE,
@@ -74,9 +92,26 @@ class ClinicService:
             actor_type="platform_admin" if created_by else "system",
             actor_id=created_by,
             clinic_id=clinic.id,
-            after={"slug": clinic.slug, "name": clinic.name},
+            after={"slug": clinic.slug, "name": clinic.name, "status": clinic.status},
             client_ip=ip_address,
         )
+
+        AuditService.record_audit(
+            session=self.session,
+            action=AuditAction.MEMBER_INVITE,
+            entity="member",
+            entity_id=owner_member.id,
+            actor_type="platform_admin" if created_by else "system",
+            actor_id=created_by,
+            clinic_id=clinic.id,
+            after={"email": owner_member.email, "role": owner_member.role, "name": owner_member.name},
+            client_ip=ip_address,
+        )
+
+        # Attach owner details for response mapping
+        clinic.owner_name = data.owner_name  # type: ignore[attr-defined]
+        clinic.owner_email = str(data.owner_email)  # type: ignore[attr-defined]
+        clinic.owner_phone = data.owner_phone  # type: ignore[attr-defined]
 
         return clinic
 

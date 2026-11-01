@@ -28,7 +28,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 09 Agent service skeleton
 - [x] 10 Vertical slice
 - [x] 11 Staff Login
-- [ ] 12 New Clinic (onboarding)
+- [x] 12 New Clinic (onboarding)
 - [ ] 13 Clinics List
 - [ ] 14 Staff Management
 - [ ] 15 Integration: Supabase Auth (email magic link; custom SMTP: Gmail a…

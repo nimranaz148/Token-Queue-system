@@ -349,6 +349,35 @@ export interface components {
             address?: string | null;
             /** Phone */
             phone?: string | null;
+            /**
+             * Clinic Name
+             * @description Alias for clinic name per PRD §5.3 F-013
+             */
+            clinic_name?: string | null;
+            /**
+             * Owner Name
+             * @description Full name of clinic owner
+             * @default Clinic Owner
+             */
+            owner_name: string;
+            /**
+             * Owner Email
+             * Format: email
+             * @description Email of clinic owner for magic link invitation
+             * @default owner@example.com
+             */
+            owner_email: string;
+            /**
+             * Owner Phone
+             * @description Owner contact phone (+92 E.164 format)
+             */
+            owner_phone?: string | null;
+            /**
+             * Status
+             * @description Initial clinic status: trial, active, or suspended
+             * @default trial
+             */
+            status: string;
         };
         /** ClinicListResponse */
         ClinicListResponse: {
@@ -397,6 +426,12 @@ export interface components {
             id: string;
             /** Status */
             status: string;
+            /** Owner Name */
+            owner_name?: string | null;
+            /** Owner Email */
+            owner_email?: string | null;
+            /** Owner Phone */
+            owner_phone?: string | null;
             /**
              * Created At
              * Format: date-time

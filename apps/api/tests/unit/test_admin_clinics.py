@@ -186,3 +186,78 @@ def test_update_clinic_status(admin_mock_db: AsyncMock) -> None:
     )
     assert res_inv.status_code == 400
     assert res_inv.json()["code"] == "INVALID_STATUS_TRANSITION"
+
+
+# --- F-013 New Clinic (Onboarding) Acceptance Tests (PRD §5.3) ---
+
+
+def test_create_clinic_validation_rules(admin_mock_db: AsyncMock) -> None:
+    """PRD §5.3 F-013: Validation rules for clinic_name, slug format, and email."""
+    admin_headers = make_auth_headers(Role.PLATFORM_ADMIN, is_admin=True)
+
+    # 1. Invalid slug with spaces or uppercase
+    res_bad_slug = client.post(
+        "/api/v1/admin/clinics",
+        headers=admin_headers,
+        json={"clinic_name": "Test Clinic", "slug": "Invalid Slug!"},
+    )
+    assert res_bad_slug.status_code == 422
+
+    # 2. Short name (<2 chars)
+    res_short_name = client.post(
+        "/api/v1/admin/clinics",
+        headers=admin_headers,
+        json={"clinic_name": "A", "slug": "valid-slug"},
+    )
+    assert res_short_name.status_code == 422
+
+    # 3. Invalid owner email
+    res_bad_email = client.post(
+        "/api/v1/admin/clinics",
+        headers=admin_headers,
+        json={
+            "clinic_name": "Test Clinic",
+            "slug": "valid-slug",
+            "owner_email": "not-an-email",
+        },
+    )
+    assert res_bad_email.status_code == 422
+
+
+def test_create_clinic_onboarding_stores_settings_and_owner(admin_mock_db: AsyncMock) -> None:
+    """PRD §5.3 F-013: Successful onboarding provisions clinic, settings, and owner member."""
+    admin_headers = make_auth_headers(Role.PLATFORM_ADMIN, is_admin=True)
+
+    mock_slug_res = MagicMock()
+    mock_slug_res.scalar_one_or_none.return_value = None
+    admin_mock_db.execute.return_value = mock_slug_res
+
+    res = client.post(
+        "/api/v1/admin/clinics",
+        headers=admin_headers,
+        json={
+            "clinic_name": "Shifa Care Clinic",
+            "slug": "shifa-care",
+            "owner_name": "Dr. Tariq Khan",
+            "owner_email": "tariq@shifacare.com",
+            "owner_phone": "+923001234567",
+            "time_zone": "Asia/Karachi",
+            "status": "active",
+        },
+    )
+    assert res.status_code == 201
+    data = res.json()
+    assert data["name"] == "Shifa Care Clinic"
+    assert data["slug"] == "shifa-care"
+    assert data["status"] == "active"
+    assert data["owner_name"] == "Dr. Tariq Khan"
+    assert data["owner_email"] == "tariq@shifacare.com"
+    assert data["owner_phone"] == "+923001234567"
+
+    # Verify session.add was called for Clinic, ClinicSettings, and ClinicMember
+    added_entities = [call.args[0] for call in admin_mock_db.add.call_args_list]
+    types_added = [type(e).__name__ for e in added_entities]
+    assert "Clinic" in types_added
+    assert "ClinicSettings" in types_added
+    assert "ClinicMember" in types_added
+

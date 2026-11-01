@@ -1,8 +1,9 @@
 import re
 import uuid
 from datetime import datetime
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class ClinicBase(BaseModel):
@@ -21,7 +22,49 @@ class ClinicBase(BaseModel):
 
 
 class ClinicCreate(ClinicBase):
-    pass
+    clinic_name: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=80,
+        description="Alias for clinic name per PRD §5.3 F-013",
+    )
+    owner_name: str = Field(
+        default="Clinic Owner",
+        min_length=2,
+        max_length=100,
+        description="Full name of clinic owner",
+    )
+    owner_email: EmailStr = Field(
+        default="owner@example.com",
+        description="Email of clinic owner for magic link invitation",
+    )
+    owner_phone: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Owner contact phone (+92 E.164 format)",
+    )
+    status: str = Field(
+        default="trial",
+        description="Initial clinic status: trial, active, or suspended",
+    )
+
+    @field_validator("status")
+    @classmethod
+    def validate_initial_status(cls, v: str) -> str:
+        valid_statuses = {"trial", "active", "suspended"}
+        if v not in valid_statuses:
+            raise ValueError(f"Invalid status '{v}'. Allowed: {valid_statuses}")
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def sync_name_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "clinic_name" in data and not data.get("name"):
+                data["name"] = data["clinic_name"]
+            elif "name" in data and not data.get("clinic_name"):
+                data["clinic_name"] = data["name"]
+        return data
 
 
 class ClinicUpdate(BaseModel):
@@ -48,7 +91,11 @@ class ClinicResponse(ClinicBase):
 
     id: uuid.UUID
     status: str
+    owner_name: str | None = None
+    owner_email: str | None = None
+    owner_phone: str | None = None
     created_at: datetime
+
 
 
 class ClinicListResponse(BaseModel):
