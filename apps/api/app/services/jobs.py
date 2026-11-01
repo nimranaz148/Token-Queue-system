@@ -16,6 +16,7 @@ from app.models.token import Token, TokenEvent
 from app.schemas.audit import AuditAction
 from app.schemas.jobs import (
     ClinicDayCloseResult,
+    DailyBriefJobResponse,
     DayCloseResponse,
     DoctorStatsSummary,
 )
@@ -298,3 +299,50 @@ class JobsService:
             processed_count=len(results),
             results=results,
         )
+
+    async def run_daily_brief(
+        self,
+        clinic_id: uuid.UUID | None = None,
+        target_date: date | None = None,
+    ) -> DailyBriefJobResponse:
+        """Execute automated or on-demand Daily Brief (W-010)."""
+        from app.services.ai_service import AIService
+
+        effective_date = target_date or date.today()
+        if clinic_id:
+            stmt = select(Clinic).where(Clinic.id == clinic_id)
+            res = await self.session.execute(stmt)
+            clinic = res.scalar_one_or_none()
+            if not clinic:
+                raise not_found(code="CLINIC_NOT_FOUND", detail=f"Clinic {clinic_id} not found.")
+            clinics = [clinic]
+        else:
+            stmt = select(Clinic).where(Clinic.status.in_(["active", "trial"]))
+            res = await self.session.execute(stmt)
+            clinics = list(res.scalars().all())
+
+        ai_service = AIService(self.session)
+        briefs_count = 0
+        errors: list[str] = []
+
+        for clinic in clinics:
+            try:
+                await ai_service.generate_daily_brief(
+                    clinic_id=clinic.id,
+                    target_date=effective_date,
+                    requested_by=None,
+                )
+                briefs_count += 1
+            except Exception as exc:
+                logger.error("Failed to generate daily brief for clinic %s: %s", clinic.id, exc)
+                errors.append(f"Clinic {clinic.name} ({clinic.id}): {exc!s}")
+
+        await self.session.commit()
+        return DailyBriefJobResponse(
+            success=True,
+            date=effective_date,
+            clinics_processed=len(clinics),
+            briefs_generated=briefs_count,
+            errors=errors,
+        )
+

@@ -53,3 +53,25 @@ class DayCloseResponse(BaseModel):
     success: bool
     processed_count: int
     results: list[ClinicDayCloseResult]
+
+
+class DailyBriefJobRequest(BaseModel):
+    """Payload for triggering the Daily Brief background job (W-010)."""
+
+    clinic_id: uuid.UUID | None = Field(
+        default=None, description="Optional clinic to generate brief for."
+    )
+    date: dt.date | None = Field(
+        default=None, description="Target date for the brief (defaults to today)."
+    )
+
+
+class DailyBriefJobResponse(BaseModel):
+    """Response returned by POST /jobs/daily-brief."""
+
+    success: bool
+    date: dt.date
+    clinics_processed: int
+    briefs_generated: int
+    errors: list[str] = Field(default_factory=list)
+

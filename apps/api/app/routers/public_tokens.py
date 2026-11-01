@@ -5,6 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.permissions import allow_public
+from app.schemas.ai import (
+    PatientChatMessageRead,
+    PatientChatRequest,
+    PatientChatResponse,
+)
 from app.schemas.token import (
     PublicClinicInfoResponse,
     SharedVisitAdviceResponse,
@@ -13,6 +18,7 @@ from app.schemas.token import (
     TokenCancelResponse,
     TokenDetailsResponse,
 )
+from app.services.ai_service import AIService
 from app.services.token import TokenService
 
 router = APIRouter(prefix="/public", tags=["public-tokens"])
@@ -105,3 +111,40 @@ async def get_shared_visit_advice(
     """Retrieve shared doctor prescription advice if clinic and visit sharing are enabled (F-021)."""
     service = TokenService(session)
     return await service.get_shared_visit_advice(public_code=public_code)
+
+
+@router.get(
+    "/tokens/{public_code}/chat",
+    response_model=list[PatientChatMessageRead],
+    dependencies=[Depends(allow_public)],
+    status_code=status.HTTP_200_OK,
+)
+async def get_patient_chat_history(
+    public_code: str,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> list[PatientChatMessageRead]:
+    """Retrieve chat message history for this token session (F-019)."""
+    service = AIService(session)
+    _, messages = await service.get_patient_chat_history(public_code=public_code)
+    return [PatientChatMessageRead.model_validate(m) for m in messages]
+
+
+@router.post(
+    "/tokens/{public_code}/chat",
+    response_model=PatientChatResponse,
+    dependencies=[Depends(allow_public)],
+    status_code=status.HTTP_200_OK,
+)
+async def send_patient_chat_message(
+    public_code: str,
+    payload: PatientChatRequest,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> PatientChatResponse:
+    """Send a message to the patient queue assistant (F-019). Answers queue & clinic questions; refuses medical advice."""
+    service = AIService(session)
+    reply, tool_calls = await service.send_patient_message(
+        public_code=public_code,
+        message=payload.message,
+    )
+    return PatientChatResponse(reply=reply, tool_calls=tool_calls)
+

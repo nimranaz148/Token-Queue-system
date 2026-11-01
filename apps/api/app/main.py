@@ -6,6 +6,7 @@ from app.core.errors import AppException, app_exception_handler
 from app.core.logging import RequestIdAndLoggingMiddleware
 from app.routers.admin_clinics import router as admin_clinics_router
 from app.routers.admin_overview import router as admin_overview_router
+from app.routers.ai import router as ai_router
 from app.routers.auth import router as auth_router
 from app.routers.display import router as display_router
 from app.routers.doctors import router as doctors_router
@@ -55,6 +56,7 @@ app.include_router(webhooks_router, prefix="/api/v1")
 app.include_router(jobs_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 app.include_router(settings_router, prefix="/api/v1")
+app.include_router(ai_router, prefix="/api/v1")
 
 
 @app.get("/")

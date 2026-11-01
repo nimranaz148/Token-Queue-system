@@ -8,7 +8,12 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.schemas.auth import Role
-from app.schemas.jobs import DayCloseRequest, DayCloseResponse
+from app.schemas.jobs import (
+    DailyBriefJobRequest,
+    DailyBriefJobResponse,
+    DayCloseRequest,
+    DayCloseResponse,
+)
 from app.services.jobs import JobsService
 
 logger = logging.getLogger(__name__)
@@ -75,3 +80,23 @@ async def trigger_day_close(
         target_date=req.date,
         force=req.force,
     )
+
+
+@router.post("/daily-brief", response_model=DailyBriefJobResponse, status_code=status.HTTP_200_OK)
+async def trigger_daily_brief(
+    payload: DailyBriefJobRequest | None = None,
+    session: Annotated[AsyncSession, Depends(get_db)] = None,
+    _: None = Depends(verify_jobs_caller),
+) -> DailyBriefJobResponse:
+    """Execute Daily Brief background job (W-010).
+
+    - Generates nightly AI brief summarizing patients, wait times, no-shows, and anomalies.
+    - Writes ai_briefs and ai_runs.
+    """
+    req = payload or DailyBriefJobRequest()
+    service = JobsService(session)
+    return await service.run_daily_brief(
+        clinic_id=req.clinic_id,
+        target_date=req.date,
+    )
+
