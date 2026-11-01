@@ -14,6 +14,7 @@ from app.routers.members import router as members_router
 from app.routers.patients import router as patients_router
 from app.routers.public_tokens import router as public_tokens_router
 from app.routers.reports import router as reports_router
+from app.routers.settings import router as settings_router
 from app.routers.tokens import router as tokens_router
 from app.routers.visits import router as visits_router
 from app.routers.webhooks import router as webhooks_router
@@ -51,6 +52,7 @@ app.include_router(display_router, prefix="/api/v1")
 app.include_router(webhooks_router, prefix="/api/v1")
 app.include_router(jobs_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
+app.include_router(settings_router, prefix="/api/v1")
 
 
 @app.get("/")

@@ -251,7 +251,7 @@ Exit gate: Owner turns online booking off and the booking page closes; daily rep
   - Acceptance: Each KPI drills down to the F-004 list with the matching filter
   - Acceptance: Owner sees all doctors; a doctor sees only own numbers; reception gets 403
   - Acceptance: An empty day shows an empty state, not an error
-- [ ] 59 Clinic Settings — F-011 (Owner; settings; P0; roles: owner)
+- [x] 59 Clinic Settings — F-011 (Owner; settings; P0; roles: owner)
   - Acceptance: A user with one of the roles (owner) can complete the Owner flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-011 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
