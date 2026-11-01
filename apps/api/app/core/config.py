@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_jwt_secret: str = ""
     supabase_service_role_key: str = ""
+    sentry_dsn: str = ""
+    sentry_environment: str = "development"
     jwt_secret_key: str = "dev-secret-key-change-in-production-only-32bytes-minimum"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60 * 24

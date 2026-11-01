@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 15 Integration: Supabase Auth
-**In progress:** 16 Integration: Sentry
-**Next:** 17 Scaffold the web app pack
+**Last completed:** 16 Integration: Sentry
+**In progress:** 17 Scaffold the web app pack
+**Next:** 19 Authentication and role guard [web-app pack]
 **Blockers:** None
 
 ---
@@ -32,7 +32,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 13 Clinics List
 - [x] 14 Staff Management
 - [x] 15 Integration: Supabase Auth (email magic link; custom SMTP: Gmail a…
-- [ ] 16 Integration: Sentry
+- [x] 16 Integration: Sentry
 - [ ] 17 Scaffold the web app with the chosen framework, strict TypeScript,…
 - [x] 18 Design tokens and layout shell [web-app pack]
 - [ ] 19 Authentication and role guard [web-app pack]

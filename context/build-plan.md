@@ -93,7 +93,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 15 Integration: Supabase Auth (email magic link; custom SMTP: Gmail app password in dev, own-domain sender in prod per Q-007) — I-001 (out/in; HTTPS, JWT/JWKS)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
-- [ ] 16 Integration: Sentry — I-006 (out; HTTPS)
+- [x] 16 Integration: Sentry — I-006 (out; HTTPS)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
 - [ ] 17 Scaffold the web app with the chosen framework, strict TypeScript, lint and format [web-app pack]
