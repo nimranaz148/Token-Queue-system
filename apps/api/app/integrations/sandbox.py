@@ -36,19 +36,41 @@ class VendorSandboxManager:
         async with httpx.AsyncClient(timeout=5.0) as client:
             try:
                 res = await client.post(CLOUDFLARE_TURNSTILE_VERIFY_URL, data=payload)
+                if res.status_code == 429:
+                    return {
+                        "success": False,
+                        "status_code": 429,
+                        "error": "RATE_LIMIT_EXCEEDED",
+                        "sandbox": True,
+                    }
+                if res.status_code >= 400:
+                    return {
+                        "success": False,
+                        "status_code": res.status_code,
+                        "error": "UPSTREAM_ERROR",
+                        "sandbox": True,
+                    }
                 data = res.json()
                 return {
                     "success": data.get("success", True),
                     "status_code": res.status_code,
                     "sandbox": True,
                 }
-            except Exception as exc:
-                logger.warning("Turnstile sandbox mock fallback: %s", exc)
+            except httpx.TimeoutException:
+                logger.warning("Turnstile sandbox timeout")
                 return {
-                    "success": True,
-                    "status_code": 200,
+                    "success": False,
+                    "status_code": 504,
+                    "error": "TIMEOUT",
                     "sandbox": True,
-                    "simulated": True,
+                }
+            except Exception as exc:
+                logger.warning("Turnstile sandbox error: %s", exc)
+                return {
+                    "success": False,
+                    "status_code": 500,
+                    "error": str(exc),
+                    "sandbox": True,
                 }
 
     @classmethod

@@ -192,7 +192,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
 - [x] 46 Authentication to the vendor (OAuth or key) with token refresh [integrations pack]
   - Acceptance: Expired token refreshes without user action
   - Acceptance: revoked token produces a clear re-consent path
-- [ ] 47 One end-to-end integration flow against the sandbox [integrations pack]
+- [x] 47 One end-to-end integration flow against the sandbox [integrations pack]
   - Acceptance: Contract test passes against a recorded response
   - Acceptance: timeout, 429 and error response each have a test
 - [ ] 48 Webhook endpoint with signature verification and idempotency [integrations pack]
