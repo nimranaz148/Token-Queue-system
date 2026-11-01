@@ -6,15 +6,15 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 ## Current Status
 
-**Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 27 Vendor accounts, sandbox access and credentials in the secret manager [integrations pack]
-**In progress:** 28 Integration skill: install an upstream one or generate a project-local one [integrations pack]
-**Next:** Phase 1 — Patient + queue core (weeks 3-4): Task 29 Token Booking
+**Phase:** Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
+**Last completed:** 28 Integration skill: install an upstream one or generate a project-local one [integrations pack] (PHASE 0 COMPLETE!)
+**In progress:** 29 Token Booking — F-001 (Patient; transaction; P0; roles: public)
+**Next:** 30 Token Confirm — F-002
 **Blockers:** None
 
 ---
 
-## Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
+## Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging [COMPLETE - 29/29]
 
 - [x] 00 Architecture Decision Record + sign-off
 - [x] 01 Repo scaffold
@@ -44,7 +44,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 25 Tool catalogue with schemas, permissions and a test per tool [agen…
 - [x] 26 Evaluation harness with a first golden set [agents pack]
 - [x] 27 Vendor accounts, sandbox access and credentials in the secret mana…
-- [ ] 28 Integration skill: install an upstream one or generate a project-l…
+- [x] 28 Integration skill: install an upstream one or generate a project-l…
 
 ## Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
 

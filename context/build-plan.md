@@ -128,7 +128,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 27 Vendor accounts, sandbox access and credentials in the secret manager [integrations pack]
   - Acceptance: A sandbox call succeeds from the dev environment
   - Acceptance: no credential is in the repository
-- [ ] 28 Integration skill: install an upstream one or generate a project-local one [integrations pack]
+- [x] 28 Integration skill: install an upstream one or generate a project-local one [integrations pack]
   - Acceptance: The skill cites the vendor documentation URL and date
 
 Each task: confirm the acceptance criteria (`/architect` turns them into failing tests first), then build, then `bash scripts/verify.sh`, then `/review`.
