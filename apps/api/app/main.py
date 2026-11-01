@@ -5,6 +5,7 @@ from app.core import tenancy as _tenancy  # noqa: F401
 from app.core.errors import AppException, app_exception_handler
 from app.core.logging import RequestIdAndLoggingMiddleware
 from app.routers.admin_clinics import router as admin_clinics_router
+from app.routers.admin_overview import router as admin_overview_router
 from app.routers.auth import router as auth_router
 from app.routers.display import router as display_router
 from app.routers.doctors import router as doctors_router
@@ -42,6 +43,7 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(admin_clinics_router, prefix="/api/v1")
+app.include_router(admin_overview_router, prefix="/api/v1")
 app.include_router(members_router, prefix="/api/v1")
 app.include_router(patients_router, prefix="/api/v1")
 app.include_router(doctors_router, prefix="/api/v1")

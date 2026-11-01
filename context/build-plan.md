@@ -255,7 +255,7 @@ Exit gate: Owner turns online booking off and the booking page closes; daily rep
   - Acceptance: A user with one of the roles (owner) can complete the Owner flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-011 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 61 Platform Overview dashboard — D-002 (role: platform_admin; KPIs: Active clinics, tokens today, tokens 7 days, clinics with zero activity 3+ days, AI spend this month)
+- [x] 61 Platform Overview dashboard — D-002 (role: platform_admin; KPIs: Active clinics, tokens today, tokens 7 days, clinics with zero activity 3+ days, AI spend this month)
   - Acceptance: Each KPI (Active clinics, tokens today, tokens 7 days, clinics with zero activity 3+ days, AI spend this month) matches a hand-computed value on a seeded dataset
   - Acceptance: Only role platform_admin can open it; an empty dataset shows an empty state, not an error
 
