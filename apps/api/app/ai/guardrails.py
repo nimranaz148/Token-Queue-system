@@ -5,6 +5,8 @@ from typing import Any
 
 URL_REGEX = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 PHONE_REGEX = re.compile(r"(\+?92[-\s]?|0)?3\d{2}[-\s]?\d{7}", re.IGNORECASE)
+EMAIL_REGEX = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+CNIC_REGEX = re.compile(r"\b\d{5}[-\s]?\d{7}[-\s]?\d\b")
 
 DEFAULT_CLINIC_MONTHLY_SPEND_CAP_USD = Decimal("2.00")  # PRD §36.18
 DEFAULT_GLOBAL_MONTHLY_SPEND_CAP_USD = Decimal("50.00")
@@ -174,25 +176,44 @@ def is_medical_advice_query(text: str) -> bool:
     return any(keyword in lowered for keyword in MEDICAL_QUERY_KEYWORDS)
 
 
+def redact_pii_text(text: str) -> str:
+    """Redact phone numbers, email addresses, and Pakistani CNIC identifiers from freeform text."""
+    redacted = PHONE_REGEX.sub("[PHONE_REDACTED]", text)
+    redacted = EMAIL_REGEX.sub("[EMAIL_REDACTED]", redacted)
+    redacted = CNIC_REGEX.sub("[CNIC_REDACTED]", redacted)
+    return redacted
+
+
 def mask_pii_for_ai(data: dict[str, Any]) -> dict[str, Any]:
-    """Mask phone numbers and personal identifiers before passing data to AI models or logging."""
+    """Mask phone numbers, emails, CNICs, full names, and confidential medical notes
+
+    before passing data to AI models, traces, or audit logs.
+    """
     sanitized: dict[str, Any] = {}
     for key, value in data.items():
+        k_lower = key.lower()
         if isinstance(value, str):
-            # Mask phone numbers
-            masked_val = PHONE_REGEX.sub("[PHONE_MASKED]", value)
-            if key.lower() in ("phone", "patient_phone", "mobile", "contact"):
+            masked_val = redact_pii_text(value)
+            if k_lower in ("phone", "patient_phone", "mobile", "contact"):
                 sanitized[key] = "[PHONE_MASKED]"
-            elif key.lower() in ("patient_name", "patient_full_name") and " " in masked_val:
-                # Keep first name only in patient chat contexts
-                sanitized[key] = masked_val.split()[0]
+            elif k_lower in ("email", "patient_email", "user_email"):
+                sanitized[key] = "[EMAIL_MASKED]"
+            elif k_lower in ("cnic", "national_id"):
+                sanitized[key] = "[CNIC_MASKED]"
+            elif k_lower in ("patient_name", "patient_full_name"):
+                # Mask full name, keep first name only per PRD §36.18
+                parts = value.strip().split()
+                sanitized[key] = f"{parts[0]} [NAME_MASKED]" if len(parts) > 1 else value
+            elif k_lower in ("notes", "private_notes", "visit_notes", "diagnosis"):
+                sanitized[key] = "[REDACTED_MEDICAL_NOTES]"
             else:
                 sanitized[key] = masked_val
         elif isinstance(value, dict):
             sanitized[key] = mask_pii_for_ai(value)
         elif isinstance(value, list):
             sanitized[key] = [
-                mask_pii_for_ai(item) if isinstance(item, dict) else item for item in value
+                mask_pii_for_ai(item) if isinstance(item, dict) else (redact_pii_text(item) if isinstance(item, str) else item)
+                for item in value
             ]
         else:
             sanitized[key] = value

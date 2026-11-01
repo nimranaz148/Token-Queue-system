@@ -187,7 +187,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
 - [x] 44 Run caps, spend cap and kill switch [agents pack]
   - Acceptance: Exceeding a cap stops the run with a clear message
   - Acceptance: the kill switch works without a deploy
-- [ ] 45 Tracing with redaction [agents pack]
+- [x] 45 Tracing with redaction [agents pack]
   - Acceptance: A trace of a run contains no personal data from the test fixtures
 - [ ] 46 Authentication to the vendor (OAuth or key) with token refresh [integrations pack]
   - Acceptance: Expired token refreshes without user action

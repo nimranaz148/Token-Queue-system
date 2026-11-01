@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
+from app.ai.guardrails import mask_pii_for_ai
 from app.ai.tools.executor import execute_tool
 from app.ai.types import ToolContext, ToolResult
 
@@ -215,7 +216,7 @@ class AgentWorkflowManager:
         return action
 
     def get_trace(self, run_id: uuid.UUID) -> list[dict[str, Any]]:
-        """Retrieve full structured trace for an agent run."""
+        """Retrieve full structured trace for an agent run with automatic PII redaction enforced."""
         steps = self._traces.get(run_id, [])
         return [
             {
@@ -223,7 +224,7 @@ class AgentWorkflowManager:
                 "step_type": s.step_type,
                 "action_id": str(s.action_id),
                 "run_id": str(s.run_id),
-                "details": s.details,
+                "details": mask_pii_for_ai(s.details),
             }
             for s in steps
         ]
