@@ -82,7 +82,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
   - Acceptance: A user with one of the roles (platform_admin) can complete the Platform flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-013 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 13 Clinics List — F-014 (Platform; list; P0; roles: platform_admin)
+- [x] 13 Clinics List — F-014 (Platform; list; P0; roles: platform_admin)
   - Acceptance: A user with one of the roles (platform_admin) can complete the Platform flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-014 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored

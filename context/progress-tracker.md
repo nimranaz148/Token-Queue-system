@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 10 Vertical slice
-**In progress:** 11 Staff Login
-**Next:** 12 New Clinic (onboarding)
+**Last completed:** 13 Clinics List
+**In progress:** 14 Staff Management
+**Next:** 15 Integration: Supabase Auth
 **Blockers:** None
 
 ---
@@ -29,7 +29,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 10 Vertical slice
 - [x] 11 Staff Login
 - [x] 12 New Clinic (onboarding)
-- [ ] 13 Clinics List
+- [x] 13 Clinics List
 - [ ] 14 Staff Management
 - [ ] 15 Integration: Supabase Auth (email magic link; custom SMTP: Gmail a…
 - [ ] 16 Integration: Sentry

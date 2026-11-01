@@ -1,13 +1,16 @@
 import uuid
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppException
+from app.core.tenancy import async_tenant_scope
 from app.models.clinic import Clinic, ClinicSettings
+from app.models.doctor import Doctor
 from app.models.member import ClinicMember
+from app.models.token import Token
 from app.schemas.audit import AuditAction
 from app.schemas.auth import Role
 from app.schemas.clinic import ClinicCreate
@@ -121,9 +124,36 @@ class ClinicService:
         limit: int = 50,
         offset: int = 0,
     ) -> tuple[Sequence[Clinic], int]:
-        """List clinics with optional name/slug search filtering."""
-        query = select(Clinic)
+        """List clinics with optional name/slug search filtering and telemetry (doctors, tokens 7d)."""
+        now = datetime.now(UTC)
+        seven_days_ago = now - timedelta(days=7)
+
         count_query = select(func.count(Clinic.id))
+
+        doctors_subq = (
+            select(func.count(Doctor.id))
+            .where(
+                Doctor.clinic_id == Clinic.id,
+                Doctor.active.is_(True),
+                Doctor.deleted_at.is_(None),
+            )
+            .scalar_subquery()
+        )
+
+        tokens_subq = (
+            select(func.count(Token.id))
+            .where(
+                Token.clinic_id == Clinic.id,
+                Token.created_at >= seven_days_ago,
+            )
+            .scalar_subquery()
+        )
+
+        query = select(
+            Clinic,
+            doctors_subq.label("doctors_count"),
+            tokens_subq.label("tokens_last_7d"),
+        )
 
         if search:
             pattern = f"%{search.strip().lower()}%"
@@ -133,13 +163,30 @@ class ClinicService:
 
         query = query.order_by(Clinic.created_at.desc()).limit(limit).offset(offset)
 
-        total_res = await self.session.execute(count_query)
-        total = total_res.scalar_one() or 0
+        async with async_tenant_scope(None, bypass=True):
+            total_res = await self.session.execute(count_query)
+            total = total_res.scalar_one() or 0
 
-        items_res = await self.session.execute(query)
-        items = items_res.scalars().all()
+            items_res = await self.session.execute(query)
+            rows = items_res.all()
 
-        return items, total
+        clinics: list[Clinic] = []
+        for row in rows:
+            if hasattr(row, "Clinic"):
+                clinic = row.Clinic
+                doc_count = getattr(row, "doctors_count", 0)
+                tok_count = getattr(row, "tokens_last_7d", 0)
+            elif isinstance(row, tuple) and len(row) >= 3:
+                clinic, doc_count, tok_count = row[0], row[1], row[2]
+            else:
+                clinic = row[0] if isinstance(row, tuple) else row
+                doc_count, tok_count = 0, 0
+
+            clinic.doctors_count = doc_count or 0
+            clinic.tokens_last_7d = tok_count or 0
+            clinics.append(clinic)
+
+        return clinics, total
 
     async def get_clinic(self, clinic_id: uuid.UUID) -> Clinic:
         """Fetch clinic by ID or raise 404."""

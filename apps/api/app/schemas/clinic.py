@@ -94,7 +94,10 @@ class ClinicResponse(ClinicBase):
     owner_name: str | None = None
     owner_email: str | None = None
     owner_phone: str | None = None
+    doctors_count: int = Field(default=0, description="Active doctors count in clinic")
+    tokens_last_7d: int = Field(default=0, description="Tokens generated in last 7 days")
     created_at: datetime
+
 
 
 

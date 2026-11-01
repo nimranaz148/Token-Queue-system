@@ -433,6 +433,18 @@ export interface components {
             /** Owner Phone */
             owner_phone?: string | null;
             /**
+             * Doctors Count
+             * @description Active doctors count in clinic
+             * @default 0
+             */
+            doctors_count: number;
+            /**
+             * Tokens Last 7D
+             * @description Tokens generated in last 7 days
+             * @default 0
+             */
+            tokens_last_7d: number;
+            /**
              * Created At
              * Format: date-time
              */

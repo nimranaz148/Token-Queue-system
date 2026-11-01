@@ -140,7 +140,7 @@ def test_list_clinics_success(admin_mock_db: AsyncMock) -> None:
     mock_count.scalar_one.return_value = 2
 
     mock_items = MagicMock()
-    mock_items.scalars.return_value.all.return_value = [c1, c2]
+    mock_items.all.return_value = [(c1, 3, 42), (c2, 1, 15)]
 
     admin_mock_db.execute.side_effect = [mock_count, mock_items]
 
@@ -150,6 +150,21 @@ def test_list_clinics_success(admin_mock_db: AsyncMock) -> None:
     assert data["total"] == 2
     assert len(data["items"]) == 2
     assert data["items"][0]["name"] == "Clinic Alpha"
+    assert data["items"][0]["doctors_count"] == 3
+    assert data["items"][0]["tokens_last_7d"] == 42
+
+
+def test_list_clinics_forbidden_for_non_admin() -> None:
+    """PRD §5.3 F-014: Only platform_admin can access clinics list."""
+    # 1. Unauthenticated -> 401
+    assert client.get("/api/v1/admin/clinics").status_code == 401
+
+    # 2. Doctor / Reception -> 403
+    doc_headers = make_auth_headers(Role.DOCTOR)
+    assert client.get("/api/v1/admin/clinics", headers=doc_headers).status_code == 403
+
+    owner_headers = make_auth_headers(Role.OWNER)
+    assert client.get("/api/v1/admin/clinics", headers=owner_headers).status_code == 403
 
 
 def test_update_clinic_status(admin_mock_db: AsyncMock) -> None:
