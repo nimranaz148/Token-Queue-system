@@ -90,7 +90,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
   - Acceptance: A user with one of the roles (owner) can complete the Owner flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-015 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 15 Integration: Supabase Auth (email magic link; custom SMTP: Gmail app password in dev, own-domain sender in prod per Q-007) — I-001 (out/in; HTTPS, JWT/JWKS)
+- [x] 15 Integration: Supabase Auth (email magic link; custom SMTP: Gmail app password in dev, own-domain sender in prod per Q-007) — I-001 (out/in; HTTPS, JWT/JWKS)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
 - [ ] 16 Integration: Sentry — I-006 (out; HTTPS)
