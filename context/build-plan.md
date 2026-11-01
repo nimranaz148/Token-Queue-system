@@ -153,7 +153,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
   - Acceptance: A user with one of the roles (owner) can complete the Owner flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-016 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 33 Integration: Supabase Realtime broadcast — I-002 (out; HTTPS publish)
+- [x] 33 Integration: Supabase Realtime broadcast — I-002 (out; HTTPS publish)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
 - [ ] 34 Integration: Cloudflare Turnstile — I-003 (in; HTTPS verify)

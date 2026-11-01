@@ -14,6 +14,7 @@ from app.core.errors import (
     unprocessable_entity,
 )
 from app.core.phone import normalize_phone
+from app.integrations.realtime import SupabaseRealtimeClient
 from app.integrations.turnstile import TurnstileService
 from app.models.clinic import Clinic, ClinicSettings
 from app.models.doctor import Doctor, DoctorSchedule
@@ -352,6 +353,20 @@ class TokenService:
         await self.session.commit()
         await self.session.refresh(token)
 
+        # Broadcast queue update via Supabase Realtime (I-002, Rule 10)
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=clinic.id,
+                doctor_id=doctor.id,
+                event="token.created",
+                token_number=token.number,
+                total_waiting=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on book_token: %s", exc)
+
         return TokenBookingResponse(
             id=token.id,
             number=token.number,
@@ -497,6 +512,19 @@ class TokenService:
 
         await self.session.commit()
         await self.session.refresh(token)
+
+        # Broadcast queue update via Supabase Realtime (I-002, Rule 10)
+        try:
+            realtime_client = SupabaseRealtimeClient()
+            await realtime_client.broadcast_queue_update(
+                clinic_id=token.clinic_id,
+                doctor_id=token.doctor_id,
+                event="token.cancelled",
+                token_number=token.number,
+                non_blocking=True,
+            )
+        except Exception as exc:
+            logger.warning("Realtime broadcast skipped on cancel_token: %s", exc)
 
         return TokenCancelResponse(
             id=token.id,
