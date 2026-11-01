@@ -77,8 +77,8 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 52 Patient Search & Profile
 - [x] 53 Next Patient (Doctor Panel)
 - [x] 54 Patient History & Visit Note
-- [ ] 55 TV Screen
-- [ ] 56 Display Device Pairing
+- [x] 55 TV Screen
+- [x] 56 Display Device Pairing
 - [ ] 57 Doctor ki Hidayat (shared visit advice)
 
 ## Phase 3 — Owner (weeks 8-9): F-010/D-001, F-011, R-001..R-004, D-002, pilot hardening, backups + restore test
