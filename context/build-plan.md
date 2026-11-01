@@ -184,7 +184,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
   - Acceptance: An approved action runs
   - Acceptance: a rejected action does not
   - Acceptance: the trace shows both
-- [ ] 44 Run caps, spend cap and kill switch [agents pack]
+- [x] 44 Run caps, spend cap and kill switch [agents pack]
   - Acceptance: Exceeding a cap stops the run with a clear message
   - Acceptance: the kill switch works without a deploy
 - [ ] 45 Tracing with redaction [agents pack]
