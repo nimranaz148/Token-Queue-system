@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 3 — Owner (weeks 8-9): F-010/D-001, F-011, R-001..R-004, D-002, pilot hardening, backups + restore test
-**Last completed:** Day Close Job (W-006) & Phase 2 Gate Check [PHASE 2 100% COMPLETE]
-**In progress:** 58 Roz ki Report (F-010 / D-001)
-**Next:** 59 Clinic Settings (F-011)
+**Last completed:** 58 Roz ki Report (F-010 / D-001)
+**In progress:** 59 Clinic Settings (F-011)
+**Next:** 61 Platform Overview dashboard (D-002)
 **Blockers:** None
 
 ---
@@ -84,7 +84,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 ## Phase 3 — Owner (weeks 8-9): F-010/D-001, F-011, R-001..R-004, D-002, pilot hardening, backups + restore test
 
-- [ ] 58 Roz ki Report (F-010 / D-001)
+- [x] 58 Roz ki Report (F-010 / D-001)
 - [ ] 59 Clinic Settings
 - [ ] 61 Platform Overview dashboard
 

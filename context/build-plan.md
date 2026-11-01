@@ -246,7 +246,7 @@ Each task: confirm the acceptance criteria (`/architect` turns them into failing
 
 Exit gate: Owner turns online booking off and the booking page closes; daily report numbers match the token list; restore test passes; pilot clinic live
 
-- [ ] 58 Roz ki Report — F-010 / dashboard D-001 (Owner; report; P1; roles: owner, doctor; KPIs: Patients seen, avg wait, no-shows, online vs walk-in, 7-day trend)
+- [x] 58 Roz ki Report — F-010 / dashboard D-001 (Owner; report; P1; roles: owner, doctor; KPIs: Patients seen, avg wait, no-shows, online vs walk-in, 7-day trend)
   - Acceptance: Each KPI (Patients seen, avg wait, no-shows, online vs walk-in, 7-day trend) matches a hand-computed value on a seeded dataset
   - Acceptance: Each KPI drills down to the F-004 list with the matching filter
   - Acceptance: Owner sees all doctors; a doctor sees only own numbers; reception gets 403
