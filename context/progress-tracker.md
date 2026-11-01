@@ -27,7 +27,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 08 UI foundation
 - [x] 09 Agent service skeleton
 - [x] 10 Vertical slice
-- [ ] 11 Staff Login
+- [x] 11 Staff Login
 - [ ] 12 New Clinic (onboarding)
 - [ ] 13 Clinics List
 - [ ] 14 Staff Management

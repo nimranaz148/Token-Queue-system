@@ -15,6 +15,7 @@ from app.schemas.auth import Role
 
 async def override_get_db() -> AsyncGenerator[AsyncMock, None]:
     mock_session = AsyncMock()
+    mock_session.add = MagicMock()
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
     mock_result.scalars.return_value.first.return_value = None
@@ -224,3 +225,85 @@ def test_doctor_permissions() -> None:
         headers={"Authorization": f"Bearer {reception_token}"},
     )
     assert res_doc_forbidden.status_code == 403
+
+
+# --- F-012 Staff Login Acceptance Tests (PRD §5.3, §14.2) ---
+
+
+def test_magic_link_validation_error() -> None:
+    """PRD §5.3 F-012: Empty or invalid email format returns 422."""
+    res = client.post("/api/v1/auth/magic-link", json={"email": "not-an-email"})
+    assert res.status_code == 422
+
+    res_empty = client.post("/api/v1/auth/magic-link", json={"email": ""})
+    assert res_empty.status_code == 422
+
+
+def test_magic_link_anti_enumeration() -> None:
+    """PRD §5.3 F-012: Non-existent email returns 200 with identical message, no link."""
+    res = client.post(
+        "/api/v1/auth/magic-link",
+        json={"email": "unregistered@clinic.com"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["message"] == "Login link email kar diya"
+    assert data["success"] is True
+    # In non-existent email case, no magic_link is generated
+    assert data.get("magic_link") is None
+
+
+def test_magic_link_success_for_staff() -> None:
+    """PRD §5.3 F-012: Active staff email returns 200 with confirmation message."""
+    res = client.post(
+        "/api/v1/auth/magic-link",
+        json={"email": "doctor@example.com"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["message"] == "Login link email kar diya"
+    assert data["success"] is True
+    # In test environment, magic_link is populated for automated testing
+    assert data.get("magic_link") is not None
+
+
+def test_magic_link_rate_limiting() -> None:
+    """PRD §5.3 F-012: 5 requests per hour per email. 6th request returns 429."""
+    test_email = f"ratelimit_{uuid.uuid4().hex[:6]}@example.com"
+    for _ in range(5):
+        res = client.post("/api/v1/auth/magic-link", json={"email": test_email})
+        assert res.status_code == 200
+
+    # 6th attempt within the hour window must be rejected
+    res_blocked = client.post("/api/v1/auth/magic-link", json={"email": test_email})
+    assert res_blocked.status_code == 429
+    assert res_blocked.json()["code"] == "RATE_LIMIT_EXCEEDED"
+
+
+def test_staff_memberships_multi_clinic() -> None:
+    """PRD §5.3 F-012: Conditional clinic choice if member of several clinics."""
+    res = client.get(
+        "/api/v1/auth/memberships",
+        params={"email": "doctor@example.com"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert "memberships" in data
+    assert isinstance(data["memberships"], list)
+
+
+def test_switch_active_clinic() -> None:
+    """PRD §5.3 F-012 & §27: Staff can switch active clinic context."""
+    token = get_token_for("doctor@example.com")
+    new_clinic_id = str(uuid.uuid4())
+
+    res = client.put(
+        "/api/v1/auth/me/active-clinic",
+        json={"clinic_id": new_clinic_id},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+

@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, Request
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -12,8 +13,12 @@ from app.core.permissions import (
 from app.schemas.auth import (
     CurrentUser,
     LoginRequest,
+    MagicLinkRequest,
+    MagicLinkResponse,
     RefreshRequest,
     Role,
+    StaffMembershipsResponse,
+    SwitchClinicRequest,
     TokenResponse,
     UserResponse,
 )
@@ -24,6 +29,47 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 owner_permission = require_roles(Role.OWNER)
 doctor_permission = require_roles(Role.DOCTOR, Role.OWNER)
 reception_permission = require_roles(Role.RECEPTION, Role.OWNER)
+
+
+@router.post("/magic-link", response_model=MagicLinkResponse)
+async def request_magic_link(
+    req: MagicLinkRequest,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> MagicLinkResponse:
+    """Request a staff login magic link (PRD §5.3 F-012).
+
+    Rate-limited to 5 requests per hour. Anti-enumeration returns identical 200 message.
+    """
+    client_ip = request.client.host if request.client else None
+    return await AuthService.request_magic_link(
+        session=session,
+        email=req.email,
+        client_ip=client_ip,
+    )
+
+
+@router.get("/memberships", response_model=StaffMembershipsResponse)
+async def get_staff_memberships(
+    email: Annotated[EmailStr, Query(description="Staff email address to query clinics for")],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> StaffMembershipsResponse:
+    """List clinics where the email holds active staff membership (PRD §5.3 F-012)."""
+    return await AuthService.get_user_memberships(session=session, email=email)
+
+
+@router.put("/me/active-clinic", response_model=TokenResponse)
+async def switch_active_clinic(
+    req: SwitchClinicRequest,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> TokenResponse:
+    """Switch active clinic context for multi-clinic staff member (PRD §5.3 & §27)."""
+    return await AuthService.switch_active_clinic(
+        session=session,
+        user=current_user,
+        new_clinic_id=req.clinic_id,
+    )
 
 
 @router.post("/login", response_model=TokenResponse)

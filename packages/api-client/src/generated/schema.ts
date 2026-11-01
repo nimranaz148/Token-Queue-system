@@ -21,6 +21,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/magic-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Magic Link
+         * @description Request a staff login magic link (PRD §5.3 F-012).
+         *
+         *     Rate-limited to 5 requests per hour. Anti-enumeration returns identical 200 message.
+         */
+        post: operations["request_magic_link_api_v1_auth_magic_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Staff Memberships
+         * @description List clinics where the email holds active staff membership (PRD §5.3 F-012).
+         */
+        get: operations["get_staff_memberships_api_v1_auth_memberships_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me/active-clinic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Switch Active Clinic
+         * @description Switch active clinic context for multi-clinic staff member (PRD §5.3 & §27).
+         */
+        put: operations["switch_active_clinic_api_v1_auth_me_active_clinic_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -295,6 +357,18 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ClinicMembershipItem */
+        ClinicMembershipItem: {
+            /**
+             * Clinic Id
+             * Format: uuid
+             */
+            clinic_id: string;
+            /** Clinic Name */
+            clinic_name: string;
+            /** Role */
+            role: string;
+        };
         /** ClinicResponse */
         ClinicResponse: {
             /**
@@ -365,10 +439,54 @@ export interface components {
              */
             clinic_id?: string | null;
         };
+        /** MagicLinkRequest */
+        MagicLinkRequest: {
+            /**
+             * Email
+             * Format: email
+             * @description Staff member or platform admin email address
+             */
+            email: string;
+        };
+        /** MagicLinkResponse */
+        MagicLinkResponse: {
+            /**
+             * Message
+             * @description Unified confirmation message shown for all requests (anti-enumeration)
+             * @default Login link email kar diya
+             */
+            message: string;
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Magic Link
+             * @description Magic login link/token for non-production environments to aid automated testing
+             */
+            magic_link?: string | null;
+        };
         /** RefreshRequest */
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** StaffMembershipsResponse */
+        StaffMembershipsResponse: {
+            /** Email */
+            email: string;
+            /** Memberships */
+            memberships?: components["schemas"]["ClinicMembershipItem"][];
+        };
+        /** SwitchClinicRequest */
+        SwitchClinicRequest: {
+            /**
+             * Clinic Id
+             * Format: uuid
+             * @description Target clinic ID to switch active context to
+             */
+            clinic_id: string;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -447,6 +565,104 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    request_magic_link_api_v1_auth_magic_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MagicLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagicLinkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_staff_memberships_api_v1_auth_memberships_get: {
+        parameters: {
+            query: {
+                /** @description Staff email address to query clinics for */
+                email: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffMembershipsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    switch_active_clinic_api_v1_auth_me_active_clinic_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SwitchClinicRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

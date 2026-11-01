@@ -12,6 +12,7 @@ def _default_title_for_status(status_code: int) -> str:
         404: "Not Found",
         409: "Conflict",
         422: "Unprocessable Entity",
+        429: "Too Many Requests",
         500: "Internal Server Error",
     }
     return titles.get(status_code, "Error")
@@ -65,6 +66,14 @@ def not_found(code: str = "NOT_FOUND", detail: str = "Resource not found") -> Ap
 
 def bad_request(code: str = "BAD_REQUEST", detail: str = "Invalid request") -> AppException:
     return AppException(status_code=400, code=code, detail=detail, title="Bad Request")
+
+
+def too_many_requests(
+    code: str = "RATE_LIMIT_EXCEEDED",
+    detail: str = "Rate limit exceeded. Please wait before retrying.",
+) -> AppException:
+    return AppException(status_code=429, code=code, detail=detail, title="Too Many Requests")
+
 
 
 async def app_exception_handler(request: Request, exc: Exception) -> Response:

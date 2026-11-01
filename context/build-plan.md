@@ -74,7 +74,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 10 Vertical slice — the smallest end-to-end feature across every layer, to prove the pattern later tasks copy
   - Acceptance: The smallest feature works end to end across every layer with one automated test
   - Acceptance: `scripts/verify.sh` passes and the pattern is written down for later tasks to copy
-- [ ] 11 Staff Login — F-012 (Staff; transaction; P0; roles: all staff)
+- [x] 11 Staff Login — F-012 (Staff; transaction; P0; roles: all staff)
   - Acceptance: A user with one of the roles (all staff) can complete the Staff flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-012 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored

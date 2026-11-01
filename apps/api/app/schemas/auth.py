@@ -54,3 +54,37 @@ class UserResponse(BaseModel):
     clinic_id: uuid.UUID | None = None
     doctor_id: uuid.UUID | None = None
     is_platform_admin: bool
+
+
+class MagicLinkRequest(BaseModel):
+    email: EmailStr = Field(description="Staff member or platform admin email address")
+
+
+class MagicLinkResponse(BaseModel):
+    message: str = Field(
+        default="Login link email kar diya",
+        description="Unified confirmation message shown for all requests (anti-enumeration)",
+    )
+    success: bool = True
+    magic_link: str | None = Field(
+        default=None,
+        description="Magic login link/token for non-production environments to aid automated testing",
+    )
+
+
+class ClinicMembershipItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    clinic_id: uuid.UUID
+    clinic_name: str
+    role: str
+
+
+class StaffMembershipsResponse(BaseModel):
+    email: str
+    memberships: list[ClinicMembershipItem] = Field(default_factory=list)
+
+
+class SwitchClinicRequest(BaseModel):
+    clinic_id: uuid.UUID = Field(description="Target clinic ID to switch active context to")
+
