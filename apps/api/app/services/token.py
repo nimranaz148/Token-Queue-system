@@ -1765,7 +1765,9 @@ class TokenService:
         res = await self.session.execute(stmt)
         row = res.first()
         if not row:
-            raise not_found(code="TOKEN_NOT_FOUND", detail="Token with specified public code not found.")
+            raise not_found(
+                code="TOKEN_NOT_FOUND", detail="Token with specified public code not found."
+            )
 
         token, doctor = row
 

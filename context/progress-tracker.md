@@ -6,10 +6,10 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 ## Current Status
 
-**Phase:** Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
-**Last completed:** 57 Doctor ki Hidayat (shared visit advice) — F-021
-**In progress:** Day Close Job (W-006) & Phase 2 Gate Check
-**Next:** Phase 3 — Owner (Task 58 Roz ki Report F-010 / D-001)
+**Phase:** Phase 3 — Owner (weeks 8-9): F-010/D-001, F-011, R-001..R-004, D-002, pilot hardening, backups + restore test
+**Last completed:** Day Close Job (W-006) & Phase 2 Gate Check [PHASE 2 100% COMPLETE]
+**In progress:** 58 Roz ki Report (F-010 / D-001)
+**Next:** 59 Clinic Settings (F-011)
 **Blockers:** None
 
 ---
@@ -70,7 +70,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 48 Webhook endpoint with signature verification and idempotency [inte…
 - [x] 49 Failure handling and alerting [integrations pack]
 
-## Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
+## Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job [COMPLETE - 9/9]
 
 - [x] 50 Aaj ki List
 - [x] 51 Walk-in Entry
@@ -80,6 +80,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 55 TV Screen
 - [x] 56 Display Device Pairing
 - [x] 57 Doctor ki Hidayat (shared visit advice)
+- [x] Day Close Job (W-006) & Phase 2 Gate Check
 
 ## Phase 3 — Owner (weeks 8-9): F-010/D-001, F-011, R-001..R-004, D-002, pilot hardening, backups + restore test
 

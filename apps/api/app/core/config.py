@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     ai_clinic_monthly_cap_usd: float = 2.0
     ai_global_monthly_cap_usd: float = 50.0
     webhook_secret: str = "dev-webhook-secret-change-in-production"
+    jobs_service_token: str = "dev-jobs-service-token-change-in-production"
 
 
 settings = Settings()

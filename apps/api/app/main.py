@@ -9,6 +9,7 @@ from app.routers.auth import router as auth_router
 from app.routers.display import router as display_router
 from app.routers.doctors import router as doctors_router
 from app.routers.health import router as health_router
+from app.routers.jobs import router as jobs_router
 from app.routers.members import router as members_router
 from app.routers.patients import router as patients_router
 from app.routers.public_tokens import router as public_tokens_router
@@ -47,6 +48,7 @@ app.include_router(tokens_router, prefix="/api/v1")
 app.include_router(visits_router, prefix="/api/v1")
 app.include_router(display_router, prefix="/api/v1")
 app.include_router(webhooks_router, prefix="/api/v1")
+app.include_router(jobs_router, prefix="/api/v1")
 
 
 @app.get("/")
