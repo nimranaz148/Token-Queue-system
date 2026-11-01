@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { PatientChatWidget } from "@/components/patient/patient-chat-widget";
 
 interface QueueTokenDetails {
   id: string;
@@ -215,6 +216,11 @@ export default function LiveQueuePage(): React.ReactElement {
           >
             <div className="bg-surface w-3.5 h-3.5 rounded-full shadow-md" />
           </button>
+        </div>
+
+        {/* AI Patient Chat Assistant (F-019) */}
+        <div className="mb-5">
+          <PatientChatWidget publicCode={publicCode} />
         </div>
 
         {/* Navigation Action */}
