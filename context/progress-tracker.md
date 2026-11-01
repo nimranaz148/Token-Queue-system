@@ -76,7 +76,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 51 Walk-in Entry
 - [x] 52 Patient Search & Profile
 - [x] 53 Next Patient (Doctor Panel)
-- [ ] 54 Patient History & Visit Note
+- [x] 54 Patient History & Visit Note
 - [ ] 55 TV Screen
 - [ ] 56 Display Device Pairing
 - [ ] 57 Doctor ki Hidayat (shared visit advice)

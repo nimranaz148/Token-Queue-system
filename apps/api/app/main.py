@@ -12,6 +12,7 @@ from app.routers.members import router as members_router
 from app.routers.patients import router as patients_router
 from app.routers.public_tokens import router as public_tokens_router
 from app.routers.tokens import router as tokens_router
+from app.routers.visits import router as visits_router
 from app.routers.webhooks import router as webhooks_router
 
 app = FastAPI(
@@ -42,6 +43,7 @@ app.include_router(patients_router, prefix="/api/v1")
 app.include_router(doctors_router, prefix="/api/v1")
 app.include_router(public_tokens_router, prefix="/api/v1")
 app.include_router(tokens_router, prefix="/api/v1")
+app.include_router(visits_router, prefix="/api/v1")
 app.include_router(webhooks_router, prefix="/api/v1")
 
 
