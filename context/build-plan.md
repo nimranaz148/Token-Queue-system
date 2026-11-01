@@ -102,7 +102,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 18 Design tokens and layout shell [web-app pack]
   - Acceptance: Tokens are the only source of colour, type and spacing
   - Acceptance: shell renders at 360 px and 1440 px without horizontal scroll
-- [ ] 19 Authentication and role guard [web-app pack]
+- [x] 19 Authentication and role guard [web-app pack]
   - Acceptance: Login, logout and expiry work
   - Acceptance: a user without the role gets 403 on a protected route
 - [ ] 20 Deploy a preview environment on a free tier [web-app pack]
