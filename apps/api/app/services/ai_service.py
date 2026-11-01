@@ -181,7 +181,7 @@ class AIService:
         res = await self.session.execute(stmt)
         brief = res.scalar_one_or_none()
 
-        body_md = result.get("brief_markdown", "No brief content generated.")
+        body_md = result.get("brief_md") or result.get("brief_markdown", "No brief content generated.")
         anomalies = result.get("anomalies", [])
 
         if brief:

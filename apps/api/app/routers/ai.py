@@ -122,7 +122,7 @@ async def generate_daily_brief(
     brief = await service.generate_daily_brief(
         clinic_id=current_user.clinic_id,
         target_date=target_date,
-        requested_by=current_user.id,
+        requested_by=current_user.user_id,
     )
     return AIBriefRead.model_validate(brief)
 
