@@ -96,7 +96,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 16 Integration: Sentry — I-006 (out; HTTPS)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
-- [ ] 17 Scaffold the web app with the chosen framework, strict TypeScript, lint and format [web-app pack]
+- [x] 17 Scaffold the web app with the chosen framework, strict TypeScript, lint and format [web-app pack]
   - Acceptance: Fresh clone installs and builds
   - Acceptance: lint and typecheck run in the fast tier
 - [x] 18 Design tokens and layout shell [web-app pack]
