@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
-**Last completed:** 30 Token Confirm — F-002 (Patient; transaction; P0; roles: public)
-**In progress:** 31 Live Queue — F-003 (Patient; list; P0; roles: public)
-**Next:** 32 Doctor Management — F-016 (Owner; master; P0; roles: owner)
+**Last completed:** 31 Live Queue — F-003 (Patient; list; P0; roles: public)
+**In progress:** 32 Doctor Management — F-016 (Owner; master; P0; roles: owner)
+**Next:** 33 Integration: Supabase Realtime broadcast — I-002
 **Blockers:** None
 
 ---
@@ -50,7 +50,8 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 - [x] 29 Token Booking
 - [x] 30 Token Confirm
-- [ ] 31 Live Queue
+- [x] 31 Live Queue
+- [ ] 32 Doctor Management
 - [ ] 31 Live Queue
 - [ ] 32 Doctor Management
 - [ ] 33 Integration: Supabase Realtime broadcast

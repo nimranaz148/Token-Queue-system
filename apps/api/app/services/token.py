@@ -412,6 +412,10 @@ class TokenService:
         )
         current_serving = (await self.session.execute(serving_stmt)).scalar_one_or_none()
 
+        # Calculate estimated wait minutes (PRD §5.3 F-003)
+        consult_mins = doctor.consult_minutes or 10 if doctor else 10
+        estimated_wait_minutes = people_ahead * consult_mins
+
         return TokenDetailsResponse(
             id=token.id,
             number=token.number,
@@ -428,6 +432,7 @@ class TokenService:
             position=token.position,
             estimated_at=token.estimated_at,
             people_ahead=people_ahead,
+            estimated_wait_minutes=estimated_wait_minutes,
             current_serving_number=current_serving,
             cancelled_reason=token.cancelled_reason,
             created_at=token.created_at,

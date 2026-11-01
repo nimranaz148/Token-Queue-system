@@ -102,6 +102,7 @@ class TokenDetailsResponse(BaseModel):
     position: Decimal | float
     estimated_at: datetime | None = None
     people_ahead: int = 0
+    estimated_wait_minutes: int = 0
     current_serving_number: int | None = None
     cancelled_reason: str | None = None
     created_at: datetime

@@ -89,6 +89,7 @@ async def test_get_token_confirm_details_success() -> None:
     assert result.specialty == "Pediatrics"
     assert result.clinic_name == "Shifa Clinic"
     assert result.people_ahead == 3
+    assert result.estimated_wait_minutes == 30
     assert result.current_serving_number == 14
     assert result.status == "booked"
 
