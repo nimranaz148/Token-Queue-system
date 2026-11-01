@@ -7,9 +7,9 @@ Update this file after every completed task. Anyone reading it should immediatel
 ## Current Status
 
 **Phase:** Phase 0 — Foundation (weeks 1-2): monorepo, CI, Docker Compose, Alembic, Supabase projects, staff login (F-012), tenancy + RLS + audit skeleton, platform admin F-013/F-014, staff F-015, design tokens, i18n, Sentry, deploy staging
-**Last completed:** 19 Authentication and role guard [web-app pack]
-**In progress:** 20 Deploy a preview environment on a free tier [web-app pack]
-**Next:** 21 Scaffold the API with lint, format, typecheck and a health endpoint [backend-api pack]
+**Last completed:** 20 Deploy a preview environment on a free tier [web-app pack]
+**In progress:** 21 Scaffold the API with lint, format, typecheck and a health endpoint [backend-api pack]
+**Next:** 26 Evaluation harness with a first golden set [agents pack]
 **Blockers:** None
 
 ---
@@ -36,7 +36,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 17 Scaffold the web app with the chosen framework, strict TypeScript,…
 - [x] 18 Design tokens and layout shell [web-app pack]
 - [x] 19 Authentication and role guard [web-app pack]
-- [ ] 20 Deploy a preview environment on a free tier [web-app pack]
+- [x] 20 Deploy a preview environment on a free tier [web-app pack]
 - [ ] 21 Scaffold the API with lint, format, typecheck and a health endpoin…
 - [x] 22 Database foundation and first migration [backend-api pack]
 - [x] 23 Authentication and authorisation skeleton [backend-api pack]

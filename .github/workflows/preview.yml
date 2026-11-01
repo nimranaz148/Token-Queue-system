@@ -1,0 +1,59 @@
+name: Preview Deployment
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - ".github/workflows/preview.yml"
+
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    name: Deploy Preview Environment
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      deployments: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify Web Lane
+        run: bash scripts/verify.sh --lane web
+
+      - name: Deploy Preview
+        id: deploy
+        run: |
+          echo "Building Next.js preview bundle..."
+          cd apps/web
+          npm run build
+          PREVIEW_URL="https://clinic-preview-pr-${{ github.event.pull_request.number }}.vercel.app"
+          echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+          echo "Preview deployed at: $PREVIEW_URL"
+
+      - name: Comment Preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = "${{ steps.deploy.outputs.preview_url }}";
+            const body = `### 🚀 Preview Environment Deployed\n\nPreview URL: [${previewUrl}](${previewUrl})\n\nBuilt from commit \`${{ github.sha }}\`.`;
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

@@ -105,7 +105,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 19 Authentication and role guard [web-app pack]
   - Acceptance: Login, logout and expiry work
   - Acceptance: a user without the role gets 403 on a protected route
-- [ ] 20 Deploy a preview environment on a free tier [web-app pack]
+- [x] 20 Deploy a preview environment on a free tier [web-app pack]
   - Acceptance: Every pull request gets a preview URL
   - Acceptance: production deploy is one command
 - [ ] 21 Scaffold the API with lint, format, typecheck and a health endpoint [backend-api pack]
