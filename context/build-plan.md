@@ -178,7 +178,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
   - Acceptance: no tenant context returns nothing
 - [x] 41 Structured logging, request ids and error reporting [backend-api pack]
   - Acceptance: A failed request can be traced from the response id to the log line
-- [ ] 42 Backups and one timed restore [backend-api pack]
+- [x] 42 Backups and one timed restore [backend-api pack]
   - Acceptance: The restore completes within the PRD recovery target
 - [ ] 43 First agent flow end to end with human approval on side effects [agents pack]
   - Acceptance: An approved action runs
