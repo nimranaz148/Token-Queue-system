@@ -68,6 +68,17 @@ def bad_request(code: str = "BAD_REQUEST", detail: str = "Invalid request") -> A
     return AppException(status_code=400, code=code, detail=detail, title="Bad Request")
 
 
+def conflict(code: str = "CONFLICT", detail: str = "Resource conflict") -> AppException:
+    return AppException(status_code=409, code=code, detail=detail, title="Conflict")
+
+
+def unprocessable_entity(
+    code: str = "UNPROCESSABLE_ENTITY",
+    detail: str = "Validation failed",
+) -> AppException:
+    return AppException(status_code=422, code=code, detail=detail, title="Unprocessable Entity")
+
+
 def too_many_requests(
     code: str = "RATE_LIMIT_EXCEEDED",
     detail: str = "Rate limit exceeded. Please wait before retrying.",

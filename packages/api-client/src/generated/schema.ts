@@ -307,6 +307,41 @@ export interface paths {
         patch: operations["update_clinic_status_api_v1_admin_clinics__clinic_id__status_patch"];
         trace?: never;
     };
+    "/api/v1/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List staff members for the authenticated owner's clinic */
+        get: operations["list_members_api_v1_members_get"];
+        put?: never;
+        /** Invite/create a new staff member (F-015) */
+        post: operations["invite_member_api_v1_members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/members/{member_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update staff member role, doctor link, or active status */
+        patch: operations["update_member_api_v1_members__member_id__patch"];
+        trace?: never;
+    };
     "/": {
         parameters: {
             query?: never;
@@ -513,6 +548,98 @@ export interface components {
              * @description Magic login link/token for non-production environments to aid automated testing
              */
             magic_link?: string | null;
+        };
+        /** MemberInviteRequest */
+        MemberInviteRequest: {
+            /**
+             * Name
+             * @description Full name of staff member
+             */
+            name: string;
+            /**
+             * Email
+             * Format: email
+             * @description Unique email address for staff login
+             */
+            email: string;
+            /**
+             * Phone
+             * @description Contact phone in E.164 or local format
+             */
+            phone?: string | null;
+            /** @description Role: owner, doctor, or reception */
+            role: components["schemas"]["MemberRole"];
+            /**
+             * Doctor Id
+             * @description Linked doctor ID (required if role is doctor)
+             */
+            doctor_id?: string | null;
+        };
+        /** MemberListResponse */
+        MemberListResponse: {
+            /** Items */
+            items: components["schemas"]["MemberResponse"][];
+            /** Total */
+            total: number;
+        };
+        /** MemberResponse */
+        MemberResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Clinic Id
+             * Format: uuid
+             */
+            clinic_id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone?: string | null;
+            /** Role */
+            role: string;
+            /** Doctor Id */
+            doctor_id?: string | null;
+            /** Doctor Name */
+            doctor_name?: string | null;
+            /** Active */
+            active: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * MemberRole
+         * @enum {string}
+         */
+        MemberRole: "owner" | "doctor" | "reception";
+        /** MemberUpdateRequest */
+        MemberUpdateRequest: {
+            /** Name */
+            name?: string | null;
+            /** Phone */
+            phone?: string | null;
+            role?: components["schemas"]["MemberRole"] | null;
+            /** Doctor Id */
+            doctor_id?: string | null;
+            /** Active */
+            active?: boolean | null;
         };
         /** RefreshRequest */
         RefreshRequest: {
@@ -1030,6 +1157,98 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClinicResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_members_api_v1_members_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberListResponse"];
+                };
+            };
+        };
+    };
+    invite_member_api_v1_members_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "user-agent"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_member_api_v1_members__member_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "user-agent"?: string | null;
+            };
+            path: {
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberResponse"];
                 };
             };
             /** @description Validation Error */
