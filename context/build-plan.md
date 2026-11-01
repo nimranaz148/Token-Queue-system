@@ -198,7 +198,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
 - [x] 48 Webhook endpoint with signature verification and idempotency [integrations pack]
   - Acceptance: A replayed event is ignored
   - Acceptance: a bad signature is rejected
-- [ ] 49 Failure handling and alerting [integrations pack]
+- [x] 49 Failure handling and alerting [integrations pack]
   - Acceptance: A forced vendor outage shows the defined degraded behaviour and raises an alert
 
 Each task: confirm the acceptance criteria (`/architect` turns them into failing tests first), then build, then `bash scripts/verify.sh`, then `/review`.

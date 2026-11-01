@@ -79,6 +79,17 @@ class TurnstileService:
                 detail="Cloudflare Turnstile verification token is missing",
             )
 
+        # Check active vendor outage - fail closed for public booking (PRD §13.3)
+        from app.integrations.outage import vendor_outage_manager
+
+        if vendor_outage_manager.is_outage("turnstile"):
+            degraded = vendor_outage_manager.get_degraded_behavior("turnstile")
+            logger.warning("Turnstile verification blocked by active outage: %s", degraded)
+            raise bad_request(
+                code="TURNSTILE_OUTAGE",
+                detail=degraded["banner_text"],
+            )
+
         token = token.strip()
 
         # Check explicit test failure token

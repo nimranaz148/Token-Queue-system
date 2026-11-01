@@ -6,10 +6,10 @@ Update this file after every completed task. Anyone reading it should immediatel
 
 ## Current Status
 
-**Phase:** Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
-**Last completed:** 48 Webhook endpoint with signature verification and idempotency [integrations pack]
-**In progress:** 49 Failure handling and alerting [integrations pack]
-**Next:** Phase 2 — Reception, doctor, TV (Task 50)
+**Phase:** Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
+**Last completed:** 49 Failure handling and alerting [integrations pack] (Phase 1 COMPLETE: 21/21 tasks)
+**In progress:** 50 Aaj ki List — F-004 (Reception; list; P0; roles: reception, owner, doctor (own))
+**Next:** 51 Walk-in Entry — F-005 (Reception; transaction; P0; roles: reception, owner)
 **Blockers:** None
 
 ---
@@ -46,7 +46,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 27 Vendor accounts, sandbox access and credentials in the secret mana…
 - [x] 28 Integration skill: install an upstream one or generate a project-l…
 
-## Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish
+## Phase 1 — Patient + queue core (weeks 3-4): doctors & OPD (F-016), booking F-001, confirm F-002, live queue F-003, token numbering, Turnstile, Realtime publish [COMPLETE - 21/21]
 
 - [x] 29 Token Booking
 - [x] 30 Token Confirm
@@ -68,7 +68,7 @@ Update this file after every completed task. Anyone reading it should immediatel
 - [x] 46 Authentication to the vendor (OAuth or key) with token refresh [in…
 - [x] 47 One end-to-end integration flow against the sandbox [integrations…
 - [x] 48 Webhook endpoint with signature verification and idempotency [inte…
-- [ ] 49 Failure handling and alerting [integrations pack]
+- [x] 49 Failure handling and alerting [integrations pack]
 
 ## Phase 2 — Reception, doctor, TV (weeks 5-7): F-004, F-005, F-006, F-007, F-008, F-009, F-020, F-021, day close job
 

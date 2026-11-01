@@ -203,7 +203,7 @@ def mask_pii_for_ai(data: dict[str, Any]) -> dict[str, Any]:
             elif k_lower in ("patient_name", "patient_full_name"):
                 # Mask full name, keep first name only per PRD §36.18
                 parts = value.strip().split()
-                sanitized[key] = f"{parts[0]} [NAME_MASKED]" if len(parts) > 1 else value
+                sanitized[key] = parts[0] if parts else value
             elif k_lower in ("notes", "private_notes", "visit_notes", "diagnosis"):
                 sanitized[key] = "[REDACTED_MEDICAL_NOTES]"
             else:

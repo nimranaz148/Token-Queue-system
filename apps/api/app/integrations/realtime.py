@@ -28,7 +28,9 @@ FORBIDDEN_PII_FIELDS = {
 class RealtimePublishError(Exception):
     """Base exception for Supabase Realtime broadcast failures (PRD §13.3 I-002)."""
 
-    def __init__(self, message: str, status_code: int = 500, error_code: str = "REALTIME_ERROR") -> None:
+    def __init__(
+        self, message: str, status_code: int = 500, error_code: str = "REALTIME_ERROR"
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
@@ -60,9 +62,15 @@ class RealtimeQueuePayload(BaseModel):
 
     token_number: int | None = Field(default=None, description="Affected token sequence number")
     current_token: int | None = Field(default=None, description="Currently serving token number")
-    total_waiting: int = Field(default=0, ge=0, description="Total patients currently waiting in queue")
-    estimated_wait_minutes: int | None = Field(default=None, ge=0, description="Estimated wait minutes")
-    event: str = Field(..., description="Queue event type (token.created, token.called, queue.update)")
+    total_waiting: int = Field(
+        default=0, ge=0, description="Total patients currently waiting in queue"
+    )
+    estimated_wait_minutes: int | None = Field(
+        default=None, ge=0, description="Estimated wait minutes"
+    )
+    event: str = Field(
+        ..., description="Queue event type (token.created, token.called, queue.update)"
+    )
     timestamp: str = Field(..., description="ISO 8601 UTC timestamp")
 
     @model_validator(mode="before")
@@ -123,13 +131,36 @@ class SupabaseRealtimeClient:
         non_blocking: bool = True,
     ) -> dict[str, Any]:
         """Publish an anonymous queue update to `queue:{clinic_id}:{doctor_id}` channel."""
+        from app.integrations.outage import vendor_outage_manager
+
+        topic = f"queue:{clinic_id}:{doctor_id}"
+
+        # 0. Check active vendor outage - activate defined degraded behavior
+        if vendor_outage_manager.is_outage("realtime"):
+            degraded = vendor_outage_manager.get_degraded_behavior("realtime")
+            logger.warning(
+                "Realtime broadcast suppressed: active vendor outage. Degraded fallback: %s",
+                degraded,
+            )
+            if not non_blocking:
+                raise RealtimePublishError(
+                    message=f"Realtime publish failed: vendor outage active ({degraded.get('banner_text')})"
+                )
+            return {
+                "status": "degraded_polling",
+                "topic": topic,
+                "degraded_behavior": degraded,
+            }
+
         # 1. Idempotency duplicate check
         now = time.time()
         if idempotency_key:
             if idempotency_key in self._processed_broadcasts:
                 expiry = self._processed_broadcasts[idempotency_key]
                 if now < expiry:
-                    logger.info("Duplicate Realtime broadcast suppressed for key %s", idempotency_key)
+                    logger.info(
+                        "Duplicate Realtime broadcast suppressed for key %s", idempotency_key
+                    )
                     return {
                         "status": "duplicate_suppressed",
                         "topic": f"queue:{clinic_id}:{doctor_id}",
@@ -185,6 +216,7 @@ class SupabaseRealtimeClient:
                     topic,
                     res.text,
                 )
+                await vendor_outage_manager.record_failure("realtime", f"HTTP {res.status_code}")
                 if not non_blocking:
                     raise RealtimePublishError(
                         message=f"Realtime publish failed with HTTP {res.status_code}",
@@ -192,6 +224,7 @@ class SupabaseRealtimeClient:
                     )
                 return {"status": "error", "status_code": res.status_code, "topic": topic}
 
+            vendor_outage_manager.record_success("realtime")
             logger.info("Realtime queue update broadcasted to %s: %s", topic, event)
             return {
                 "status": "published",
@@ -202,6 +235,7 @@ class SupabaseRealtimeClient:
 
         except httpx.TimeoutException as exc:
             logger.warning("Realtime broadcast timeout on %s: %s", topic, exc)
+            await vendor_outage_manager.record_failure("realtime", "TimeoutException")
             if not non_blocking:
                 raise RealtimeTimeoutError() from exc
             return {"status": "timeout_fallback_to_polling", "topic": topic}
@@ -210,6 +244,7 @@ class SupabaseRealtimeClient:
             if isinstance(exc, RealtimePublishError):
                 raise
             logger.error("Realtime publish unexpected error on %s: %s", topic, exc)
+            await vendor_outage_manager.record_failure("realtime", str(exc))
             if not non_blocking:
                 raise RealtimePublishError(message=str(exc)) from exc
             return {"status": "error_fallback_to_polling", "topic": topic, "detail": str(exc)}
