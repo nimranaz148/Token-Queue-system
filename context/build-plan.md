@@ -149,7 +149,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
   - Acceptance: A user with one of the roles (public) can complete the Patient flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-003 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 32 Doctor Management — F-016 (Owner; master; P0; roles: owner)
+- [x] 32 Doctor Management — F-016 (Owner; master; P0; roles: owner)
   - Acceptance: A user with one of the roles (owner) can complete the Owner flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-016 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
