@@ -176,7 +176,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
 - [x] 40 Tenant or branch scoping (if the PRD has it) [backend-api pack]
   - Acceptance: A test proves tenant A cannot read or write tenant B
   - Acceptance: no tenant context returns nothing
-- [ ] 41 Structured logging, request ids and error reporting [backend-api pack]
+- [x] 41 Structured logging, request ids and error reporting [backend-api pack]
   - Acceptance: A failed request can be traced from the response id to the log line
 - [ ] 42 Backups and one timed restore [backend-api pack]
   - Acceptance: The restore completes within the PRD recovery target

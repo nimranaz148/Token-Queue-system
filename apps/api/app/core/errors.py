@@ -1,7 +1,10 @@
+import logging
 from typing import Any
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger("app.errors")
 
 
 def _default_title_for_status(status_code: int) -> str:
@@ -105,8 +108,9 @@ def too_many_requests(
     return AppException(status_code=429, code=code, detail=detail, title="Too Many Requests")
 
 
-
 async def app_exception_handler(request: Request, exc: Exception) -> Response:
+    request_id = getattr(request.state, "request_id", None) or request.headers.get("x-request-id")
+
     if isinstance(exc, AppException):
         content: dict[str, Any] = {
             "type": "about:blank",
@@ -115,21 +119,57 @@ async def app_exception_handler(request: Request, exc: Exception) -> Response:
             "detail": exc.detail,
             "code": exc.code,
         }
+        if request_id:
+            content["request_id"] = request_id
         if exc.extra:
             content.update(exc.extra)
+
+        headers = dict(exc.headers or {})
+        if request_id:
+            headers["x-request-id"] = request_id
+
+        logger.warning(
+            f"AppException [{exc.code}] {exc.detail} on {request.method} {request.url.path} (request_id={request_id})",
+            extra={
+                "request_id": request_id,
+                "error_code": exc.code,
+                "status_code": exc.status_code,
+                "path": request.url.path,
+                "method": request.method,
+            },
+        )
         return JSONResponse(
             status_code=exc.status_code,
             content=content,
-            headers=exc.headers,
+            headers=headers,
         )
+
+    logger.error(
+        f"Unhandled error on {request.method} {request.url.path} (request_id={request_id}): {exc}",
+        exc_info=True,
+        extra={
+            "request_id": request_id,
+            "status_code": 500,
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+    headers = {}
+    if request_id:
+        headers["x-request-id"] = request_id
+
+    content_500: dict[str, Any] = {
+        "type": "about:blank",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "An unexpected error occurred",
+        "code": "INTERNAL_SERVER_ERROR",
+    }
+    if request_id:
+        content_500["request_id"] = request_id
 
     return JSONResponse(
         status_code=500,
-        content={
-            "type": "about:blank",
-            "title": "Internal Server Error",
-            "status": 500,
-            "detail": "An unexpected error occurred",
-            "code": "INTERNAL_SERVER_ERROR",
-        },
+        content=content_500,
+        headers=headers,
     )

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import tenancy as _tenancy  # noqa: F401
 from app.core.errors import AppException, app_exception_handler
+from app.core.logging import RequestIdAndLoggingMiddleware
 from app.routers.admin_clinics import router as admin_clinics_router
 from app.routers.auth import router as auth_router
 from app.routers.doctors import router as doctors_router
@@ -21,6 +22,7 @@ __all__ = ["app"]
 
 app.add_exception_handler(AppException, app_exception_handler)
 
+app.add_middleware(RequestIdAndLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
