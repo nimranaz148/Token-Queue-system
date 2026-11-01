@@ -180,7 +180,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
   - Acceptance: A failed request can be traced from the response id to the log line
 - [x] 42 Backups and one timed restore [backend-api pack]
   - Acceptance: The restore completes within the PRD recovery target
-- [ ] 43 First agent flow end to end with human approval on side effects [agents pack]
+- [x] 43 First agent flow end to end with human approval on side effects [agents pack]
   - Acceptance: An approved action runs
   - Acceptance: a rejected action does not
   - Acceptance: the trace shows both
