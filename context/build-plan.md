@@ -265,25 +265,25 @@ Each task: confirm the acceptance criteria (`/architect` turns them into failing
 
 Exit gate: Patient asks "mera number kab aayega" and gets the correct number of people ahead; brief generated at 21:00; every AI call appears in F-017; Gemini fallback works when OpenRouter key is disabled
 
-- [ ] 62 AI Activity Log — F-017 (AI; list; P1; roles: owner, platform_admin)
+- [x] 62 AI Activity Log — F-017 (AI; list; P1; roles: owner, platform_admin)
   - Acceptance: A user with one of the roles (owner, platform_admin) can complete the AI flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-017 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 63 Daily Brief — F-018 (AI; report; P2; roles: owner)
+- [x] 63 Daily Brief — F-018 (AI; report; P2; roles: owner)
   - Acceptance: A user with one of the roles (owner) can complete the AI flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-018 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 64 Patient Chat Assistant — F-019 (AI; transaction; P2; roles: public)
+- [x] 64 Patient Chat Assistant — F-019 (AI; transaction; P2; roles: public)
   - Acceptance: A user with one of the roles (public) can complete the AI flow; a user without them gets 403
   - Acceptance: Validation and required fields match the field spec for F-019 in PRD §5.3 (one test per rule)
   - Acceptance: One end-to-end test drives the form and checks what was stored
-- [ ] 65 AI Command Center dashboard — D-003 (role: owner, platform_admin; KPIs: AI calls, failures, fallback rate, cost, thumbs-down rate)
+- [x] 65 AI Command Center dashboard — D-003 (role: owner, platform_admin; KPIs: AI calls, failures, fallback rate, cost, thumbs-down rate)
   - Acceptance: Each KPI (AI calls, failures, fallback rate, cost, thumbs-down rate) matches a hand-computed value on a seeded dataset
   - Acceptance: Only role owner, platform_admin can open it; an empty dataset shows an empty state, not an error
-- [ ] 66 Integration: OpenRouter — I-004 (out; HTTPS (OpenAI-compatible))
+- [x] 66 Integration: OpenRouter — I-004 (out; HTTPS (OpenAI-compatible))
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
-- [ ] 67 Integration: Google Gemini API — I-005 (out; HTTPS)
+- [x] 67 Integration: Google Gemini API — I-005 (out; HTTPS)
   - Acceptance: A contract test against a recorded or sandbox response proves the happy path
   - Acceptance: A timeout, an error response and a duplicate delivery are each handled by a test
 
