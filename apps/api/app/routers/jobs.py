@@ -99,4 +99,3 @@ async def trigger_daily_brief(
         clinic_id=req.clinic_id,
         target_date=req.date,
     )
-

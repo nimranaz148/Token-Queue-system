@@ -147,4 +147,3 @@ async def send_patient_chat_message(
         message=payload.message,
     )
     return PatientChatResponse(reply=reply, tool_calls=tool_calls)
-

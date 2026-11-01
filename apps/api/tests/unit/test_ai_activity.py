@@ -1,7 +1,7 @@
 import datetime as dt
 import uuid
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -74,9 +74,7 @@ async def test_owner_can_view_ai_activity(owner_token: str, sample_ai_run: AIRun
     with patch("app.services.ai_service.AIService.get_activity_log") as mock_get_log:
         mock_get_log.return_value = ([sample_ai_run], 1)
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 "/api/v1/ai/activity",
                 headers={"Authorization": f"Bearer {owner_token}"},
@@ -106,9 +104,7 @@ async def test_platform_admin_can_view_ai_activity(
     with patch("app.services.ai_service.AIService.get_activity_log") as mock_get_log:
         mock_get_log.return_value = ([sample_ai_run], 1)
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 f"/api/v1/ai/activity?clinic_id={sample_ai_run.clinic_id}&feature=chat",
                 headers={"Authorization": f"Bearer {platform_admin_token}"},
@@ -136,9 +132,7 @@ async def test_ai_activity_filters(owner_token: str, sample_ai_run: AIRun) -> No
     with patch("app.services.ai_service.AIService.get_activity_log") as mock_get_log:
         mock_get_log.return_value = ([sample_ai_run], 1)
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 "/api/v1/ai/activity?start_date=2026-11-01&end_date=2026-11-02&feature=chat",
                 headers={"Authorization": f"Bearer {owner_token}"},

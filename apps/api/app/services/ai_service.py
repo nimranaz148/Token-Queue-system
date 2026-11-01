@@ -9,11 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.agents.daily_brief import DailyBriefAgent
 from app.ai.agents.patient_chat import PatientChatAgent
-from app.ai.providers.manager import ProviderManager
 from app.ai.types import AgentMessage
-from app.core.tenancy import async_tenant_scope
 from app.models.ai import AIBrief, AIRun, ChatMessage
-from app.models.clinic import Clinic, ClinicSettings
 from app.models.token import Token
 from app.services.ai_data import AIDataService
 
@@ -181,7 +178,9 @@ class AIService:
         res = await self.session.execute(stmt)
         brief = res.scalar_one_or_none()
 
-        body_md = result.get("brief_md") or result.get("brief_markdown", "No brief content generated.")
+        body_md = result.get("brief_md") or result.get(
+            "brief_markdown", "No brief content generated."
+        )
         anomalies = result.get("anomalies", [])
 
         if brief:
@@ -215,9 +214,7 @@ class AIService:
         await self.session.flush()
         return brief
 
-    async def get_patient_chat_history(
-        self, public_code: str
-    ) -> tuple[Token, list[ChatMessage]]:
+    async def get_patient_chat_history(self, public_code: str) -> tuple[Token, list[ChatMessage]]:
         """Fetch chat history for a patient token by its unguessable public code."""
         stmt = select(Token).where(Token.public_code == public_code)
         res = await self.session.execute(stmt)
@@ -237,9 +234,7 @@ class AIService:
         messages = list(chat_res.scalars().all())
         return token, messages
 
-    async def send_patient_message(
-        self, public_code: str, message: str
-    ) -> tuple[str, list[str]]:
+    async def send_patient_message(self, public_code: str, message: str) -> tuple[str, list[str]]:
         """Execute PatientChatAgent with strict 20 msg/day rate limiting and guardrails."""
         stmt = select(Token).where(Token.public_code == public_code)
         res = await self.session.execute(stmt)
@@ -274,9 +269,7 @@ class AIService:
         )
         hist_res = await self.session.execute(history_stmt)
         history_records = list(hist_res.scalars().all())
-        agent_history = [
-            AgentMessage(role=h.role, content=h.content) for h in history_records
-        ]
+        agent_history = [AgentMessage(role=h.role, content=h.content) for h in history_records]
 
         # Record patient message
         patient_msg = ChatMessage(

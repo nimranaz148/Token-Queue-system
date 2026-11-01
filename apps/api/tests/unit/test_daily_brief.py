@@ -1,6 +1,6 @@
 import datetime as dt
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -59,9 +59,7 @@ async def test_owner_can_get_daily_brief(owner_token: str, sample_brief: AIBrief
     with patch("app.services.ai_service.AIService.get_daily_brief") as mock_get:
         mock_get.return_value = sample_brief
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 "/api/v1/ai/daily-brief?date=2026-11-01",
                 headers={"Authorization": f"Bearer {owner_token}"},
@@ -80,9 +78,7 @@ async def test_owner_can_generate_daily_brief(owner_token: str, sample_brief: AI
     with patch("app.services.ai_service.AIService.generate_daily_brief") as mock_gen:
         mock_gen.return_value = sample_brief
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.post(
                 "/api/v1/ai/daily-brief/generate?date=2026-11-01",
                 headers={"Authorization": f"Bearer {owner_token}"},
@@ -100,9 +96,7 @@ async def test_owner_can_submit_feedback(owner_token: str, sample_brief: AIBrief
     with patch("app.services.ai_service.AIService.submit_brief_feedback") as mock_fb:
         mock_fb.return_value = sample_brief
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.post(
                 f"/api/v1/ai/daily-brief/{sample_brief.id}/feedback",
                 json={"feedback": "up"},
@@ -139,9 +133,7 @@ async def test_daily_brief_job_endpoint() -> None:
             errors=[],
         )
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.post(
                 "/api/v1/jobs/daily-brief",
                 json={"date": "2026-11-01"},

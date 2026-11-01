@@ -1,7 +1,7 @@
 import datetime as dt
 import uuid
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -82,9 +82,7 @@ async def test_owner_can_access_ai_command_center(owner_token: str, sample_kpis:
     with patch("app.services.ai_service.AIService.get_command_center_kpis") as mock_kpis:
         mock_kpis.return_value = sample_kpis
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 "/api/v1/ai/command-center",
                 headers={"Authorization": f"Bearer {owner_token}"},
@@ -109,9 +107,7 @@ async def test_platform_admin_can_filter_command_center(
         mock_kpis.return_value = sample_kpis
 
         target_clinic = uuid.uuid4()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 f"/api/v1/ai/command-center?clinic_id={target_clinic}",
                 headers={"Authorization": f"Bearer {platform_admin_token}"},
@@ -147,9 +143,7 @@ async def test_command_center_empty_dataset(owner_token: str) -> None:
     with patch("app.services.ai_service.AIService.get_command_center_kpis") as mock_kpis:
         mock_kpis.return_value = empty_kpis
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 "/api/v1/ai/command-center",
                 headers={"Authorization": f"Bearer {owner_token}"},

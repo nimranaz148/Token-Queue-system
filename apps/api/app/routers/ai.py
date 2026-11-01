@@ -26,14 +26,14 @@ router = APIRouter(prefix="/ai", tags=["ai"])
     status_code=status.HTTP_200_OK,
 )
 async def get_ai_activity(
-    current_user: Annotated[
-        CurrentUser, Depends(require_roles(Role.OWNER, Role.PLATFORM_ADMIN))
-    ],
+    current_user: Annotated[CurrentUser, Depends(require_roles(Role.OWNER, Role.PLATFORM_ADMIN))],
     session: Annotated[AsyncSession, Depends(get_db)],
     start_date: Annotated[dt.date | None, Query(description="Start date filter")] = None,
     end_date: Annotated[dt.date | None, Query(description="End date filter")] = None,
     feature: Annotated[str | None, Query(description="Feature filter")] = None,
-    clinic_id: Annotated[uuid.UUID | None, Query(description="Platform admin clinic filter")] = None,
+    clinic_id: Annotated[
+        uuid.UUID | None, Query(description="Platform admin clinic filter")
+    ] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> AIActivityResponse:
@@ -65,11 +65,11 @@ async def get_ai_activity(
     status_code=status.HTTP_200_OK,
 )
 async def get_ai_command_center(
-    current_user: Annotated[
-        CurrentUser, Depends(require_roles(Role.OWNER, Role.PLATFORM_ADMIN))
-    ],
+    current_user: Annotated[CurrentUser, Depends(require_roles(Role.OWNER, Role.PLATFORM_ADMIN))],
     session: Annotated[AsyncSession, Depends(get_db)],
-    clinic_id: Annotated[uuid.UUID | None, Query(description="Filter by clinic (admin only)")] = None,
+    clinic_id: Annotated[
+        uuid.UUID | None, Query(description="Filter by clinic (admin only)")
+    ] = None,
 ) -> AICommandCenterResponse:
     """Retrieve AI Command Center KPIs and recent runs (D-003)."""
     is_admin = current_user.role == Role.PLATFORM_ADMIN

@@ -74,4 +74,3 @@ class DailyBriefJobResponse(BaseModel):
     clinics_processed: int
     briefs_generated: int
     errors: list[str] = Field(default_factory=list)
-

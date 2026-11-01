@@ -345,4 +345,3 @@ class JobsService:
             briefs_generated=briefs_count,
             errors=errors,
         )
-

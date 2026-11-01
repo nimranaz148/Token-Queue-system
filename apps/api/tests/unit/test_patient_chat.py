@@ -1,6 +1,6 @@
 import datetime as dt
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -32,9 +32,7 @@ async def test_patient_can_ask_queue_status(sample_token: Token) -> None:
             ["get_my_token_status"],
         )
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.post(
                 f"/api/v1/public/tokens/{sample_token.public_code}/chat",
                 json={"message": "Mera number kab aayega?"},
@@ -55,9 +53,7 @@ async def test_patient_chat_refuses_medical_advice(sample_token: Token) -> None:
             [],
         )
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.post(
                 f"/api/v1/public/tokens/{sample_token.public_code}/chat",
                 json={"message": "Bukhar aur gale mein dard ki dawa bata dein"},
@@ -79,9 +75,7 @@ async def test_patient_chat_rate_limiting(sample_token: Token) -> None:
             detail="Rozana 20 messages ki had poori ho chuki hai.",
         )
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.post(
                 f"/api/v1/public/tokens/{sample_token.public_code}/chat",
                 json={"message": "Halat kaisi hai?"},
@@ -109,9 +103,7 @@ async def test_patient_chat_history_endpoint(sample_token: Token) -> None:
     with patch("app.services.ai_service.AIService.get_patient_chat_history") as mock_hist:
         mock_hist.return_value = (sample_token, [msg1, msg2])
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             res = await client.get(
                 f"/api/v1/public/tokens/{sample_token.public_code}/chat",
             )
