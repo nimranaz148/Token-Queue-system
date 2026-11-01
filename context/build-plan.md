@@ -123,7 +123,7 @@ Exit gate: Admin creates a clinic, owner logs in with an email magic link, adds 
 - [x] 25 Tool catalogue with schemas, permissions and a test per tool [agents pack]
   - Acceptance: A forbidden call is rejected
   - Acceptance: each tool has a unit test
-- [ ] 26 Evaluation harness with a first golden set [agents pack]
+- [x] 26 Evaluation harness with a first golden set [agents pack]
   - Acceptance: The suite runs in the fast tier against recorded model responses
 - [ ] 27 Vendor accounts, sandbox access and credentials in the secret manager [integrations pack]
   - Acceptance: A sandbox call succeeds from the dev environment
