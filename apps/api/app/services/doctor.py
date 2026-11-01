@@ -2,7 +2,7 @@ import logging
 import uuid
 from datetime import UTC, datetime, time
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import not_found
@@ -29,16 +29,30 @@ class DoctorService:
         self,
         clinic_id: uuid.UUID,
         active_only: bool = False,
+        limit: int = 50,
+        offset: int = 0,
     ) -> tuple[list[DoctorResponse], int]:
-        """List doctors belonging to the specified clinic tenant."""
-        stmt = select(Doctor).where(
+        """List doctors belonging to the specified clinic tenant with pagination."""
+        base_filter = [
             Doctor.clinic_id == clinic_id,
             Doctor.deleted_at.is_(None),
-        )
+        ]
         if active_only:
-            stmt = stmt.where(Doctor.active.is_(True))
-        stmt = stmt.order_by(Doctor.name)
+            base_filter.append(Doctor.active.is_(True))
 
+        # Total count query
+        count_stmt = select(func.count(Doctor.id)).where(*base_filter)
+        count_res = await self.session.execute(count_stmt)
+        total = count_res.scalar() or 0
+
+        # Paginated items query
+        stmt = (
+            select(Doctor)
+            .where(*base_filter)
+            .order_by(Doctor.name)
+            .limit(limit)
+            .offset(offset)
+        )
         res = await self.session.execute(stmt)
         doctors = res.scalars().all()
 
@@ -79,7 +93,7 @@ class DoctorService:
                 )
             )
 
-        return results, len(results)
+        return results, total
 
     async def get_doctor(self, clinic_id: uuid.UUID, doctor_id: uuid.UUID) -> DoctorResponse:
         """Fetch a specific doctor by ID, strictly scoped to caller's clinic."""

@@ -32,6 +32,8 @@ async def list_doctors(
     current_user: Annotated[CurrentUser, Depends(require_clinic_member)],
     session: Annotated[AsyncSession, Depends(get_db)],
     active_only: Annotated[bool, Query(description="Filter active doctors only")] = False,
+    limit: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 50,
+    offset: Annotated[int, Query(ge=0, description="Pagination offset")] = 0,
 ) -> DoctorListResponse:
     if not current_user.clinic_id:
         raise forbidden(code="CLINIC_REQUIRED", detail="Active clinic session required")
@@ -40,6 +42,8 @@ async def list_doctors(
     items, total = await service.list_doctors(
         clinic_id=current_user.clinic_id,
         active_only=active_only,
+        limit=limit,
+        offset=offset,
     )
     return DoctorListResponse(items=items, total=total)
 

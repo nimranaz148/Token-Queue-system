@@ -48,9 +48,9 @@ class DoctorCreate(BaseModel):
     )
     consult_minutes: int | None = Field(
         default=10,
-        ge=1,
-        le=120,
-        description="Average consult duration in minutes",
+        ge=5,
+        le=60,
+        description="Average consult duration in minutes (5..60)",
     )
     active: bool = Field(default=True, description="Whether doctor is active for OPD bookings")
     schedules: list[DoctorScheduleCreate] = Field(
@@ -62,7 +62,7 @@ class DoctorUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=2, max_length=100)
     specialty: str | None = Field(default=None, max_length=100)
     daily_online_limit: int | None = Field(default=None, ge=1, le=500)
-    consult_minutes: int | None = Field(default=None, ge=1, le=120)
+    consult_minutes: int | None = Field(default=None, ge=5, le=60)
     active: bool | None = Field(default=None)
 
 

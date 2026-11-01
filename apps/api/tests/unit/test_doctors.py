@@ -59,6 +59,7 @@ def test_list_doctors_permissions(mock_db: AsyncMock) -> None:
     for role in [Role.OWNER, Role.DOCTOR, Role.RECEPTION]:
         headers = make_auth_headers(role, clinic_id=clinic_id)
         mock_result = MagicMock()
+        mock_result.scalar.return_value = 0
         mock_result.scalars.return_value.all.return_value = []
         mock_db.execute.return_value = mock_result
 
@@ -225,3 +226,111 @@ def test_delete_doctor_soft_deletes(mock_db: AsyncMock) -> None:
     assert existing_doc.deleted_at is not None
     assert existing_doc.active is False
     assert mock_db.commit.called
+
+
+def test_doctor_pagination(mock_db: AsyncMock) -> None:
+    clinic_id = uuid.uuid4()
+    now = datetime.now(UTC)
+    headers = make_auth_headers(Role.OWNER, clinic_id=clinic_id)
+
+    doc1 = Doctor(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        name="Dr. Alpha",
+        specialty="General",
+        active=True,
+        created_at=now,
+        updated_at=now,
+    )
+    doc2 = Doctor(
+        id=uuid.uuid4(),
+        clinic_id=clinic_id,
+        name="Dr. Beta",
+        specialty="Dental",
+        active=True,
+        created_at=now,
+        updated_at=now,
+    )
+
+    # Mock count_res and items_res
+    count_mock = MagicMock()
+    count_mock.scalar.return_value = 10
+
+    items_mock = MagicMock()
+    items_mock.scalars.return_value.all.return_value = [doc1, doc2]
+
+    sched_mock = MagicMock()
+    sched_mock.scalars.return_value.all.return_value = []
+
+    mock_db.execute.side_effect = [count_mock, items_mock, sched_mock, sched_mock]
+
+    res = client.get("/api/v1/doctors?limit=2&offset=4", headers=headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["total"] == 10
+    assert len(data["items"]) == 2
+    assert data["items"][0]["name"] == "Dr. Alpha"
+    assert data["items"][1]["name"] == "Dr. Beta"
+
+
+def test_doctor_validation_errors_rfc7807(mock_db: AsyncMock) -> None:
+    clinic_id = uuid.uuid4()
+    owner_headers = make_auth_headers(Role.OWNER, clinic_id=clinic_id)
+
+    # 1. Missing name (empty) -> 422
+    res_empty_name = client.post(
+        "/api/v1/doctors",
+        json={"name": "", "consult_minutes": 15},
+        headers=owner_headers,
+    )
+    assert res_empty_name.status_code == 422
+    err_empty = res_empty_name.json()
+    assert "detail" in err_empty
+
+    # 2. Consult minutes out of range (< 5 or > 60) -> 422
+    res_invalid_dur = client.post(
+        "/api/v1/doctors",
+        json={"name": "Dr. Range", "consult_minutes": 120},
+        headers=owner_headers,
+    )
+    assert res_invalid_dur.status_code == 422
+    err_dur = res_invalid_dur.json()
+    assert "detail" in err_dur
+
+    # 3. Negative daily limit -> 422
+    res_neg_limit = client.post(
+        "/api/v1/doctors",
+        json={"name": "Dr. Negative", "daily_online_limit": -5},
+        headers=owner_headers,
+    )
+    assert res_neg_limit.status_code == 422
+
+
+def test_doctor_error_format_contract_rfc7807(mock_db: AsyncMock) -> None:
+    # 401 Unauthorized returns RFC 7807 problem details
+    res_401 = client.get("/api/v1/doctors")
+    assert res_401.status_code == 401
+    err_401 = res_401.json()
+    assert err_401.get("code") == "UNAUTHORIZED" or "detail" in err_401
+
+    # 403 Forbidden without clinic returns RFC 7807 problem details
+    headers_no_clinic = make_auth_headers(Role.OWNER, clinic_id=None)
+    res_403 = client.get("/api/v1/doctors", headers=headers_no_clinic)
+    assert res_403.status_code == 403
+    err_403 = res_403.json()
+    assert err_403["code"] == "CLINIC_REQUIRED"
+    assert "detail" in err_403
+
+    # 404 Not Found returns RFC 7807 problem details
+    clinic_id = uuid.uuid4()
+    owner_headers = make_auth_headers(Role.OWNER, clinic_id=clinic_id)
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    mock_db.execute.return_value = mock_result
+
+    res_404 = client.get(f"/api/v1/doctors/{uuid.uuid4()}", headers=owner_headers)
+    assert res_404.status_code == 404
+    err_404 = res_404.json()
+    assert err_404["code"] == "DOCTOR_NOT_FOUND"
+    assert "detail" in err_404
+

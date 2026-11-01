@@ -170,7 +170,7 @@ Exit gate: From a phone, book 2 tokens for the same doctor; numbers are 1 and 2;
   - Acceptance: the performance budget lane passes
 - [x] 38 End-to-end smoke test of the critical flow [web-app pack]
   - Acceptance: One browser test signs in and completes the main task
-- [ ] 39 First vertical slice: one resource with create, read, update, delete [backend-api pack]
+- [x] 39 First vertical slice: one resource with create, read, update, delete [backend-api pack]
   - Acceptance: Validation, authorisation and pagination are tested
   - Acceptance: error format matches the contract
 - [ ] 40 Tenant or branch scoping (if the PRD has it) [backend-api pack]
