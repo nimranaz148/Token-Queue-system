@@ -57,7 +57,7 @@ jobs:
             if [ "$ok" != 1 ]; then echo "::error::$url did not become healthy in time."; exit 1; fi
           done
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
