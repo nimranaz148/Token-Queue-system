@@ -13,6 +13,8 @@ from app.schemas.jobs import (
     DailyBriefJobResponse,
     DayCloseRequest,
     DayCloseResponse,
+    EstimatesJobRequest,
+    EstimatesJobResponse,
 )
 from app.services.jobs import JobsService
 
@@ -61,8 +63,8 @@ async def verify_jobs_caller(
 
 @router.post("/day-close", response_model=DayCloseResponse, status_code=status.HTTP_200_OK)
 async def trigger_day_close(
+    session: Annotated[AsyncSession, Depends(get_db)],
     payload: DayCloseRequest | None = None,
-    session: Annotated[AsyncSession, Depends(get_db)] = None,
     _: None = Depends(verify_jobs_caller),
 ) -> DayCloseResponse:
     """Execute Day Close background job (W-006).
@@ -84,8 +86,8 @@ async def trigger_day_close(
 
 @router.post("/daily-brief", response_model=DailyBriefJobResponse, status_code=status.HTTP_200_OK)
 async def trigger_daily_brief(
+    session: Annotated[AsyncSession, Depends(get_db)],
     payload: DailyBriefJobRequest | None = None,
-    session: Annotated[AsyncSession, Depends(get_db)] = None,
     _: None = Depends(verify_jobs_caller),
 ) -> DailyBriefJobResponse:
     """Execute Daily Brief background job (W-010).
@@ -98,4 +100,23 @@ async def trigger_daily_brief(
     return await service.run_daily_brief(
         clinic_id=req.clinic_id,
         target_date=req.date,
+    )
+
+
+@router.post("/estimates", response_model=EstimatesJobResponse, status_code=status.HTTP_200_OK)
+async def trigger_estimates_refresh(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    payload: EstimatesJobRequest | None = None,
+    _: None = Depends(verify_jobs_caller),
+) -> EstimatesJobResponse:
+    """Execute Wait-Time Estimates refresh background job (PRD §3.3 & §13.2).
+
+    - Predicts wait times for currently waiting tokens.
+    - Persists estimates to wait_predictions table.
+    """
+    req = payload or EstimatesJobRequest()
+    service = JobsService(session)
+    return await service.run_estimates(
+        clinic_id=req.clinic_id,
+        doctor_id=req.doctor_id,
     )

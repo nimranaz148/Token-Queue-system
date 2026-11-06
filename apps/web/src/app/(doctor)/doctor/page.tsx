@@ -223,19 +223,20 @@ export default function DoctorPanelPage({
           { label: "Aaj ki List", href: "/tokens", icon: <Clock className="w-4 h-4" /> },
         ]}
       >
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="w-full space-y-6 lg:space-y-8">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
+          <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 overflow-hidden rounded-2xl border border-accent-border bg-surface px-5 py-6 shadow-sm sm:px-8 sm:py-7">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-20 h-56 w-56 rounded-full border border-accent/10 sm:h-72 sm:w-72" />
+            <div aria-hidden="true" className="pointer-events-none absolute -right-1 -top-12 h-44 w-44 rounded-full border border-accent/10 sm:h-60 sm:w-60" />
             <div>
-              <div className="flex items-center gap-2">
-                <Stethoscope className="w-6 h-6 text-accent" />
-                <h1 className="text-2xl font-bold tracking-tight text-fg">
-                  Doctor Consultation Panel
-                </h1>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
-                  F-007
-                </span>
+              <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+                <Stethoscope className="h-4 w-4" />
+                <span>Doctor workspace</span>
+                <span className="rounded-full border border-accent-border px-2 py-0.5 font-mono tracking-normal">F-007</span>
               </div>
+              <h1 className="font-display text-3xl font-medium tracking-tight text-fg sm:text-4xl">
+                Doctor Consultation Panel
+              </h1>
               <p className="text-sm text-fg-muted mt-1">
                 {queue?.doctor_name ? `${queue.doctor_name} — ` : ""}
                 Mareez ko call karein (NEXT), skip ya hold karein aur quick consult notes likhein
@@ -244,14 +245,14 @@ export default function DoctorPanelPage({
 
             {/* Queue Counter Badges */}
             <div className="flex items-center gap-2 text-xs">
-              <span className="px-2.5 py-1 rounded-md bg-surface-raised border border-border text-fg">
-                Kul: <strong className="text-accent">{queue?.counts.total || 0}</strong>
+              <span className="min-w-20 rounded-xl border border-border bg-canvas px-3 py-2 text-center text-[11px] text-fg-muted">
+                Kul <strong className="mt-1 block font-mono text-lg text-fg">{queue?.counts.total || 0}</strong>
               </span>
-              <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                Arrived: <strong>{queue?.counts.arrived || 0}</strong>
+              <span className="min-w-20 rounded-xl border border-success-border bg-success-subtle px-3 py-2 text-center text-[11px] text-success">
+                Arrived <strong className="mt-1 block font-mono text-lg">{queue?.counts.arrived || 0}</strong>
               </span>
-              <span className="px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                Hold/Skip: <strong>{(queue?.counts.hold || 0) + (queue?.counts.skipped || 0)}</strong>
+              <span className="min-w-20 rounded-xl border border-warning-border bg-warning-subtle px-3 py-2 text-center text-[11px] text-warning">
+                Hold / skip <strong className="mt-1 block font-mono text-lg">{(queue?.counts.hold || 0) + (queue?.counts.skipped || 0)}</strong>
               </span>
             </div>
           </div>
@@ -276,10 +277,11 @@ export default function DoctorPanelPage({
             {/* Left 7 Columns: Active Patient & Big NEXT Button */}
             <div className="lg:col-span-7 space-y-6">
               {/* Active Serving Card */}
-              <div className="bg-surface border border-accent/40 rounded-xl p-6 shadow-xs space-y-5">
+              <div className="relative overflow-hidden rounded-2xl border border-accent-border bg-surface p-5 shadow-md sm:p-7 lg:p-8 space-y-5">
+                <div aria-hidden="true" className="pointer-events-none absolute -right-14 top-8 h-44 w-44 rounded-full border border-accent/10" />
                 <div className="flex items-center justify-between pb-3 border-b border-border">
                   <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-accent animate-pulse" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-success" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-accent">
                       Currently Serving (Zair-e-Muaina)
                     </span>
@@ -293,10 +295,10 @@ export default function DoctorPanelPage({
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
                       <div className="space-y-1">
-                        <div className="text-4xl font-black text-accent font-mono">
+                        <div className="inline-flex min-w-28 items-center justify-center rounded-2xl bg-accent-subtle px-5 py-3 font-mono text-5xl font-semibold tracking-tight text-accent sm:text-6xl">
                           #{currentToken.number}
                         </div>
-                        <h2 className="text-2xl font-bold text-fg flex items-center gap-2">
+                        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-fg flex items-center gap-2">
                           <User className="w-5 h-5 text-accent" />
                           {currentToken.patient_name}
                         </h2>
@@ -375,7 +377,7 @@ export default function DoctorPanelPage({
                     variant="primary"
                     onClick={handleCallNext}
                     disabled={isSubmittingNext}
-                    className="w-full h-14 text-lg font-black tracking-wider uppercase shadow-md flex items-center justify-center gap-2"
+                    className="w-full h-14 rounded-xl text-base font-semibold tracking-wide uppercase shadow-md flex items-center justify-center gap-2 sm:text-lg"
                     aria-label="Call next patient button"
                   >
                     <Play className="w-5 h-5 fill-current" />
@@ -389,7 +391,7 @@ export default function DoctorPanelPage({
             {/* Right 5 Columns: Next 3 in line & Skipped/Hold Recalls */}
             <div className="lg:col-span-5 space-y-6">
               {/* Next in Line (Next 3 Patients) */}
-              <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
+              <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4 sm:p-6">
                 <div className="flex items-center justify-between pb-2 border-b border-border">
                   <h3 className="text-sm font-semibold text-fg flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-accent" />
@@ -405,7 +407,7 @@ export default function DoctorPanelPage({
                     {nextTokens.map((tok, idx) => (
                       <div
                         key={tok.id}
-                        className="p-3 rounded-lg bg-surface-raised border border-border/80 flex items-center justify-between gap-3"
+                        className="relative rounded-xl border border-border bg-canvas p-3.5 flex items-center justify-between gap-3 transition-colors hover:bg-surface-hover"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center font-mono font-bold text-sm text-accent">

@@ -74,3 +74,32 @@ class DailyBriefJobResponse(BaseModel):
     clinics_processed: int
     briefs_generated: int
     errors: list[str] = Field(default_factory=list)
+
+
+class EstimatesJobRequest(BaseModel):
+    """Payload for triggering the Wait-Time Estimates background job."""
+
+    clinic_id: uuid.UUID | None = Field(
+        default=None, description="Optional clinic to recalculate wait estimates for."
+    )
+    doctor_id: uuid.UUID | None = Field(
+        default=None, description="Optional doctor to recalculate wait estimates for."
+    )
+
+
+class EstimatesJobResult(BaseModel):
+    """Result of wait-time prediction for a single waiting token."""
+
+    token_id: uuid.UUID
+    doctor_id: uuid.UUID
+    predicted_minutes: int
+    saved: bool
+
+
+class EstimatesJobResponse(BaseModel):
+    """Response returned by POST /jobs/estimates."""
+
+    success: bool
+    tokens_processed: int
+    predictions: list[EstimatesJobResult] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)

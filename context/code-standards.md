@@ -142,3 +142,5 @@ Prefer one architecture test covering every endpoint/entity over a hand-written 
 8. **Merge** — only approved, passing PRs reach protected branches
 
 AI tooling is never given unrestricted production credentials or unrestricted database write access. Production deployment uses controlled CI/CD credentials only.
+
+All web source files must be saved as UTF-8. Run `node scripts/check-web-source-utf8.mjs` when changing files under `apps/web/src`; do not use a shell's legacy default encoding for source edits.

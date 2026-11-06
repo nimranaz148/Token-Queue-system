@@ -4,9 +4,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.errors import forbidden
 from app.core.permissions import require_clinic_member, require_roles
+from app.core.tenancy import get_scoped_db
 from app.schemas.auth import CurrentUser, Role
 from app.schemas.doctor import (
     DoctorCreate,
@@ -30,7 +30,7 @@ owner_required = require_roles(Role.OWNER)
 )
 async def list_doctors(
     current_user: Annotated[CurrentUser, Depends(require_clinic_member)],
-    session: Annotated[AsyncSession, Depends(get_db)],
+    session: Annotated[AsyncSession, Depends(get_scoped_db)],
     active_only: Annotated[bool, Query(description="Filter active doctors only")] = False,
     limit: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 50,
     offset: Annotated[int, Query(ge=0, description="Pagination offset")] = 0,
@@ -56,7 +56,7 @@ async def list_doctors(
 async def get_doctor(
     doctor_id: uuid.UUID,
     current_user: Annotated[CurrentUser, Depends(require_clinic_member)],
-    session: Annotated[AsyncSession, Depends(get_db)],
+    session: Annotated[AsyncSession, Depends(get_scoped_db)],
 ) -> DoctorResponse:
     if not current_user.clinic_id:
         raise forbidden(code="CLINIC_REQUIRED", detail="Active clinic session required")
@@ -78,7 +78,7 @@ async def create_doctor(
     data: DoctorCreate,
     request: Request,
     current_user: Annotated[CurrentUser, Depends(owner_required)],
-    session: Annotated[AsyncSession, Depends(get_db)],
+    session: Annotated[AsyncSession, Depends(get_scoped_db)],
 ) -> DoctorResponse:
     if not current_user.clinic_id:
         raise forbidden(code="CLINIC_REQUIRED", detail="Active clinic session required")
@@ -106,7 +106,7 @@ async def update_doctor(
     data: DoctorUpdate,
     request: Request,
     current_user: Annotated[CurrentUser, Depends(owner_required)],
-    session: Annotated[AsyncSession, Depends(get_db)],
+    session: Annotated[AsyncSession, Depends(get_scoped_db)],
 ) -> DoctorResponse:
     if not current_user.clinic_id:
         raise forbidden(code="CLINIC_REQUIRED", detail="Active clinic session required")
@@ -135,7 +135,7 @@ async def update_schedules(
     schedules: list[DoctorScheduleCreate],
     request: Request,
     current_user: Annotated[CurrentUser, Depends(owner_required)],
-    session: Annotated[AsyncSession, Depends(get_db)],
+    session: Annotated[AsyncSession, Depends(get_scoped_db)],
 ) -> list[DoctorScheduleResponse]:
     if not current_user.clinic_id:
         raise forbidden(code="CLINIC_REQUIRED", detail="Active clinic session required")
@@ -163,7 +163,7 @@ async def delete_doctor(
     doctor_id: uuid.UUID,
     request: Request,
     current_user: Annotated[CurrentUser, Depends(owner_required)],
-    session: Annotated[AsyncSession, Depends(get_db)],
+    session: Annotated[AsyncSession, Depends(get_scoped_db)],
 ) -> None:
     if not current_user.clinic_id:
         raise forbidden(code="CLINIC_REQUIRED", detail="Active clinic session required")

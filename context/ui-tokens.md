@@ -37,7 +37,7 @@ className="bg-blue-500 text-gray-600"
 
 Clinic queue (patient phones, reception desk, doctor panel, waiting-room TV) screens are read before they are clicked. These tokens optimize for **density, scanability and long-session legibility**, not marketing impact.
 
-- Neutral slate ground so status colors carry all the signal
+- Warm paper ground and botanical teal so queue status remains clear without looking sterile
 - One accent, used sparingly — primary actions and active navigation only
 - Semantic status colors that survive being the only differentiator in a dense grid
 
@@ -52,79 +52,85 @@ Clinic queue (patient phones, reception desk, doctor panel, waiting-room TV) scr
   /* ---------- Typography ---------- */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: Georgia, "Times New Roman", serif;
 
   /* ---------- Page and surface backgrounds ---------- */
-  --color-canvas: #f1f5f9;          /* app background behind panels */
-  --color-surface: #ffffff;          /* cards, panels, form shells */
-  --color-surface-raised: #ffffff;   /* modals, popovers, dropdowns */
-  --color-surface-sunken: #f8fafc;   /* grid headers, read-only fields */
-  --color-surface-hover: #f1f5f9;    /* row and menu hover */
-  --color-surface-active: #e2e8f0;   /* pressed, selected row */
+  --color-canvas: #f3f4ed;          /* warm paper ground */
+  --color-surface: #fffefa;          /* cards, panels, form shells */
+  --color-surface-raised: #fffefa;   /* modals, popovers, dropdowns */
+  --color-surface-sunken: #e9ede4;   /* grid headers, read-only fields */
+  --color-surface-hover: #f0f2ea;    /* row and menu hover */
+  --color-surface-active: #dce5d9;   /* pressed, selected row */
 
   /* ---------- Borders ---------- */
-  --color-border: #e2e8f0;           /* default panel and input border */
-  --color-border-strong: #cbd5e1;    /* grid cell dividers, separators */
-  --color-border-focus: #2563eb;     /* focus ring */
+  --color-border: #dce2d7;           /* default panel and input border */
+  --color-border-strong: #c5d0c3;    /* grid cell dividers, separators */
+  --color-border-focus: #19745e;     /* focus ring */
 
   /* ---------- Text ---------- */
-  --color-fg: #0f172a;               /* primary text, grid values */
-  --color-fg-muted: #475569;         /* labels, secondary text */
-  --color-fg-subtle: #94a3b8;        /* placeholders, disabled, meta */
+  --color-fg: #1a2e27;               /* primary text, grid values */
+  --color-fg-muted: #5d6d64;         /* labels, secondary text */
+  --color-fg-subtle: #819087;        /* placeholders, disabled, meta */
   --color-fg-inverse: #ffffff;       /* text on accent/solid fills */
 
   /* ---------- Accent (primary action) ---------- */
-  --color-accent: #2563eb;
-  --color-accent-hover: #1d4ed8;
-  --color-accent-active: #1e40af;
-  --color-accent-subtle: #eff6ff;    /* active nav background, selected tint */
-  --color-accent-border: #bfdbfe;
+  --color-accent: #19745e;
+  --color-accent-hover: #145d4d;
+  --color-accent-active: #104b3f;
+  --color-accent-subtle: #e3efe8;    /* active nav background, selected tint */
+  --color-accent-border: #bfd7c7;
 
   /* ---------- Semantic status ---------- */
-  --color-success: #059669;
-  --color-success-subtle: #ecfdf5;
-  --color-success-border: #a7f3d0;
+  --color-success: #28734f;
+  --color-success-subtle: #e8f3e9;
+  --color-success-border: #c1dec6;
 
-  --color-warning: #d97706;
-  --color-warning-subtle: #fffbeb;
-  --color-warning-border: #fde68a;
+  --color-warning: #a56721;
+  --color-warning-subtle: #f7f0df;
+  --color-warning-border: #ead4a9;
 
-  --color-danger: #dc2626;
-  --color-danger-hover: #b91c1c;
-  --color-danger-subtle: #fef2f2;
-  --color-danger-border: #fecaca;
+  --color-danger: #a8453c;
+  --color-danger-hover: #91382f;
+  --color-danger-subtle: #f7e9e5;
+  --color-danger-border: #e7c4bc;
 
-  --color-info: #0891b2;
-  --color-info-subtle: #ecfeff;
-  --color-info-border: #a5f3fc;
+  --color-info: #3c7180;
+  --color-info-subtle: #e7f0f0;
+  --color-info-border: #c4d9da;
 
-  --color-neutral: #64748b;
-  --color-neutral-subtle: #f1f5f9;
-  --color-neutral-border: #cbd5e1;
+  --color-neutral: #6a756f;
+  --color-neutral-subtle: #ecefe9;
+  --color-neutral-border: #cbd2c8;
+
+  /* ---------- Special TV Display ---------- */
+  --color-tv-surface: #064e3b;
+  --color-tv-highlight: #34d399;
 
   /* ---------- Financial figures ---------- */
-  --color-positive: #059669;         /* credits, gains, in-stock */
-  --color-negative: #dc2626;         /* debits, losses, negative stock */
+  --color-positive: #28734f;
+  --color-negative: #a8453c;
 
   /* ---------- Charts (dashboards) ---------- */
-  --color-chart-1: #2563eb;
-  --color-chart-2: #0891b2;
-  --color-chart-3: #7c3aed;
-  --color-chart-4: #d97706;
-  --color-chart-5: #059669;
-  --color-chart-6: #db2777;
-  --color-chart-grid: #e2e8f0;
-  --color-chart-axis: #94a3b8;
+  --color-chart-1: #19745e;
+  --color-chart-2: #739b80;
+  --color-chart-3: #3c7180;
+  --color-chart-4: #ad7a36;
+  --color-chart-5: #508b68;
+  --color-chart-6: #a66d63;
+  --color-chart-grid: #dce2d7;
+  --color-chart-axis: #819087;
 
   /* ---------- Type scale ---------- */
-  --text-2xs: 0.6875rem;   /* 11px — grid meta, badges */
-  --text-xs: 0.75rem;      /* 12px — labels, table headers, captions */
-  --text-sm: 0.8125rem;    /* 13px — GRID AND FORM DEFAULT */
-  --text-base: 0.875rem;   /* 14px — body, buttons */
-  --text-md: 1rem;         /* 16px — section headings */
-  --text-lg: 1.125rem;     /* 18px — page titles */
-  --text-xl: 1.375rem;     /* 22px — KPI values */
-  --text-2xl: 1.75rem;     /* 28px — large KPI, headline totals */
-  --text-3xl: 2.25rem;     /* 36px — grand total */
+  --text-display: clamp(3.25rem, 6vw, 4.5rem);
+  --text-2xs: 0.6875rem;   /* 11px */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.8125rem;    /* 13px */
+  --text-base: 0.875rem;   /* 14px */
+  --text-md: 1rem;         /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.375rem;     /* 22px */
+  --text-2xl: 1.75rem;     /* 28px */
+  --text-3xl: 2.25rem;     /* 36px */
 
   /* ---------- Spacing ---------- */
   --spacing-0-5: 0.125rem;
@@ -139,35 +145,22 @@ Clinic queue (patient phones, reception desk, doctor panel, waiting-room TV) scr
   --spacing-12: 3rem;
 
   /* ---------- Radius ---------- */
-  --radius-sm: 0.25rem;    /* inputs, badges */
-  --radius-md: 0.375rem;   /* buttons, cards */
-  --radius-lg: 0.5rem;     /* panels, modals */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
   --radius-full: 9999px;
 
   /* ---------- Elevation ---------- */
-  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
-  --shadow-md: 0 2px 8px -1px rgb(15 23 42 / 0.08);
-  --shadow-lg: 0 8px 24px -4px rgb(15 23 42 / 0.12);
-  --shadow-popover: 0 4px 16px -2px rgb(15 23 42 / 0.14);
+  --shadow-sm: 0 2px 8px 0 rgb(26 46 39 / 0.04);
+  --shadow-md: 0 8px 24px -8px rgb(26 46 39 / 0.12);
+  --shadow-lg: 0 18px 48px -20px rgb(26 46 39 / 0.24);
 
   /* ---------- Layout ---------- */
-  --layout-sidebar: 15rem;         /* 240px expanded */
+  --layout-sidebar: 15rem;
   --layout-sidebar-collapsed: 3.5rem;
-  --layout-topbar: 3.5rem;         /* 56px */
-  --layout-page-max: 100%;         /* dense app: full width, no centered max */
-  --layout-form-max: 60rem;        /* 960px for single-column master forms */
-
-  /* ---------- Data grid density ---------- */
-  --grid-row-compact: 1.75rem;     /* 28px */
-  --grid-row-default: 2.25rem;     /* 36px */
-  --grid-row-comfortable: 2.75rem; /* 44px */
-  --grid-header: 2.25rem;
-  --grid-cell-px: 0.75rem;
-
-  /* ---------- Form controls ---------- */
-  --control-sm: 1.75rem;           /* 28px */
-  --control-md: 2.125rem;          /* 34px — DEFAULT for forms */
-  --control-lg: 2.5rem;            /* 40px */
+  --layout-topbar: 3.5rem;
+  --layout-page-max: 100%;
+  --layout-form-max: 60rem;
 
   /* ---------- Motion ---------- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

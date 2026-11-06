@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import Any
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,8 +85,9 @@ class PatientService:
             .group_by(Visit.patient_id)
         )
         visit_res = await self.session.execute(visit_stmt)
-        visit_stats = {
-            row[0]: {"visit_count": row[1], "last_visit_date": row[2]} for row in visit_res.all()
+        visit_stats: dict[uuid.UUID, dict[str, Any]] = {
+            row[0]: {"visit_count": int(row[1] or 0), "last_visit_date": row[2]}
+            for row in visit_res.all()
         }
 
         # 2. From completed/serviced tokens if visits don't exist
@@ -103,8 +105,9 @@ class PatientService:
             .group_by(Token.patient_id)
         )
         token_res = await self.session.execute(token_stmt)
-        token_stats = {
-            row[0]: {"token_count": row[1], "last_token_date": row[2]} for row in token_res.all()
+        token_stats: dict[uuid.UUID, dict[str, Any]] = {
+            row[0]: {"token_count": int(row[1] or 0), "last_token_date": row[2]}
+            for row in token_res.all()
         }
 
         results: list[PatientSearchResult] = []
@@ -115,11 +118,11 @@ class PatientService:
             visit_count = 0
             last_visit = None
 
-            if v_stat and v_stat["visit_count"] > 0:
-                visit_count = v_stat["visit_count"]
+            if v_stat and int(v_stat["visit_count"]) > 0:
+                visit_count = int(v_stat["visit_count"])
                 last_visit = v_stat["last_visit_date"]
-            elif t_stat and t_stat["token_count"] > 0:
-                visit_count = t_stat["token_count"]
+            elif t_stat and int(t_stat["token_count"]) > 0:
+                visit_count = int(t_stat["token_count"])
                 last_visit = t_stat["last_token_date"]
 
             results.append(

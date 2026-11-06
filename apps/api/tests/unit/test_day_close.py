@@ -275,3 +275,89 @@ async def test_day_close_api_endpoint_authentication():
             )
             assert res.status_code == 200
             assert res.json()["success"] is True
+
+
+@pytest.mark.asyncio
+async def test_run_estimates_calculates_predictions():
+    """Verify JobsService.run_estimates processes active waiting tokens (PRD §3.3 & §13.2)."""
+    clinic_id = uuid.uuid4()
+    doctor_id = uuid.uuid4()
+    token_id = uuid.uuid4()
+
+    mock_token = Token(
+        id=token_id,
+        clinic_id=clinic_id,
+        doctor_id=doctor_id,
+        visit_date=date.today(),
+        position=1,
+        status="booked",
+    )
+
+    session = AsyncMock(spec=AsyncSession)
+
+    def execute_side_effect(stmt, *args, **kwargs):
+        stmt_str = str(stmt)
+        mock_result = MagicMock()
+        if "FROM tokens" in stmt_str and "count" in stmt_str:
+            mock_result.scalar.return_value = 0
+        elif "FROM tokens" in stmt_str:
+            mock_result.scalars.return_value.all.return_value = [mock_token]
+        else:
+            mock_result.scalars.return_value.all.return_value = []
+        return mock_result
+
+    session.execute.side_effect = execute_side_effect
+
+    with patch("app.ai.agents.wait_predictor.WaitPredictorAgent.predict_and_save") as mock_predict:
+        mock_predict.return_value = {
+            "token_id": token_id,
+            "predicted_minutes": 15,
+            "saved": True,
+            "error": None,
+        }
+
+        service = JobsService(session)
+        res = await service.run_estimates(clinic_id=clinic_id, doctor_id=doctor_id)
+
+        assert res.success is True
+        assert res.tokens_processed == 1
+        assert res.predictions[0].token_id == token_id
+        assert res.predictions[0].predicted_minutes == 15
+        assert res.predictions[0].saved is True
+
+
+@pytest.mark.asyncio
+async def test_estimates_api_endpoint_authentication():
+    """Verify POST /api/v1/jobs/estimates security and routing."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. With production env, invalid token must return 401
+        with patch.object(settings, "environment", "production"):
+            res = await client.post(
+                "/api/v1/jobs/estimates",
+                headers={"Authorization": "Bearer bad-token"},
+            )
+            assert res.status_code == 401
+
+        # 2. With valid service token header, authentication succeeds
+        with (
+            patch.object(settings, "environment", "production"),
+            patch.object(settings, "jobs_service_token", "secret-test-token"),
+            patch("app.services.jobs.JobsService.run_estimates") as mock_run,
+        ):
+            from app.schemas.jobs import EstimatesJobResponse
+
+            mock_run.return_value = EstimatesJobResponse(
+                success=True,
+                tokens_processed=0,
+                predictions=[],
+                errors=[],
+            )
+
+            res = await client.post(
+                "/api/v1/jobs/estimates",
+                headers={"Authorization": "Bearer secret-test-token"},
+                json={},
+            )
+            assert res.status_code == 200
+            assert res.json()["success"] is True

@@ -175,51 +175,51 @@ export default function RozKiReportPage({
         clinicName="Shifa Clinic"
         userName="Clinic Owner"
       >
-        <div className="space-y-6">
+        <div className="w-full space-y-7 lg:space-y-8">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 rounded-2xl border border-border bg-surface px-5 py-6 shadow-sm sm:px-7">
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+                <span className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+                <span className="text-xs font-semibold text-accent uppercase tracking-wider">
                   Live Analytics
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-1">
+              <h1 className="mt-2 font-display text-3xl font-medium tracking-[-0.035em] text-fg sm:text-4xl">
                 Roz ki Report
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-fg-muted mt-0.5">
                 Daily OPD performance, wait times, and queue throughput (D-001 / F-010)
               </p>
             </div>
 
             {/* Filter controls: [Aaj ▾] [Doctor ▾] */}
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center bg-white border border-gray-300 rounded-lg shadow-sm px-2.5 py-1.5">
-                <Calendar className="w-4 h-4 text-gray-500 mr-2" />
+              <div className="flex items-center bg-surface border border-border-strong rounded-lg shadow-sm px-2.5 py-1.5">
+                <Calendar className="w-4 h-4 text-fg-muted mr-2" />
                 <input
                   type="date"
                   aria-label="Report Date"
                   value={selectedDate}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  className="text-sm font-medium text-gray-700 bg-transparent border-none outline-none focus:ring-0"
+                  className="text-sm font-medium text-fg bg-transparent border-none outline-none focus:ring-0"
                 />
                 <button
                   type="button"
                   onClick={setToday}
-                  className="ml-2 text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded hover:bg-teal-100"
+                  className="ml-2 text-xs font-bold text-accent-hover bg-accent-subtle px-2 py-0.5 rounded hover:bg-accent-subtle"
                 >
                   Aaj
                 </button>
               </div>
 
-              <div className="flex items-center bg-white border border-gray-300 rounded-lg shadow-sm px-2.5 py-1.5">
-                <Filter className="w-4 h-4 text-gray-500 mr-2" />
+              <div className="flex items-center bg-surface border border-border-strong rounded-lg shadow-sm px-2.5 py-1.5">
+                <Filter className="w-4 h-4 text-fg-muted mr-2" />
                 <select
                   aria-label="Doctor Filter"
                   value={selectedDoctorId}
                   onChange={(e) => handleDoctorChange(e.target.value)}
-                  className="text-sm font-medium text-gray-700 bg-transparent border-none outline-none focus:ring-0"
+                  className="text-sm font-medium text-fg bg-transparent border-none outline-none focus:ring-0"
                 >
                   <option value="">All Doctors (Tamam)</option>
                   {doctors.map((doc) => (
@@ -245,32 +245,44 @@ export default function RozKiReportPage({
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-danger-subtle border border-danger-border text-danger px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           {/* KPI Cards Grid (PRD §29.1 D-001) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
             {/* Card 1: Patients seen */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="relative isolate overflow-hidden bg-accent rounded-2xl border border-accent p-5 text-fg-inverse shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg sm:p-6 lg:col-span-4">
+              <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 h-64 w-64 rounded-full border border-fg-inverse/10" />
+              <div aria-hidden="true" className="pointer-events-none absolute -right-2 -top-12 h-48 w-48 rounded-full border border-fg-inverse/10" />
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-fg-inverse/70 uppercase tracking-wider">
                   Patients Seen
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
+                <div className="w-8 h-8 rounded-lg bg-surface/10 flex items-center justify-center text-fg-inverse">
                   <Users className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-3xl font-black text-gray-900 tracking-tight">
+                <div className="font-mono text-5xl font-semibold text-fg-inverse tracking-tight sm:text-6xl">
                   {reportData.kpis.patients_seen}
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-gray-500">Mareez dekhe gaye</span>
+                <div
+                  className="mt-4 h-1.5 overflow-hidden rounded-full bg-fg-inverse/15"
+                  role="progressbar"
+                  aria-label="Patients seen against daily tokens"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.min(100, reportData.kpis.total_tokens ? (reportData.kpis.patients_seen / reportData.kpis.total_tokens) * 100 : 0)}
+                >
+                  <div className="h-full rounded-full bg-fg-inverse" style={{ width: `${Math.min(100, reportData.kpis.total_tokens ? (reportData.kpis.patients_seen / reportData.kpis.total_tokens) * 100 : 0)}%` }} />
+                </div>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-xs text-fg-inverse/75">Mareez dekhe gaye</span>
                   <Link
                     href="/tokens?status=done"
-                    className="inline-flex items-center text-xs font-bold text-teal-600 hover:text-teal-700 gap-0.5"
+                    className="inline-flex items-center text-xs font-bold text-fg-inverse hover:text-fg-inverse/80 gap-0.5"
                   >
                     View <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -279,44 +291,44 @@ export default function RozKiReportPage({
             </div>
 
             {/* Card 2: Avg wait */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md lg:col-span-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Avg Wait
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                <div className="w-8 h-8 rounded-lg bg-info-subtle flex items-center justify-center text-info">
                   <Clock className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-3xl font-black text-gray-900 tracking-tight">
+                <div className="font-mono text-2xl font-semibold text-fg tracking-tight">
                   {reportData.kpis.avg_wait_minutes ? `${reportData.kpis.avg_wait_minutes}m` : "—"}
                 </div>
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-fg-muted mt-2">
                   Average intezar duration
                 </div>
               </div>
             </div>
 
             {/* Card 3: No-shows */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-warning-subtle rounded-2xl border border-warning-border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md lg:col-span-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   No-shows
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                <div className="w-8 h-8 rounded-lg bg-warning-subtle flex items-center justify-center text-warning">
                   <UserX className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-3xl font-black text-gray-900 tracking-tight">
+                <div className="font-mono text-2xl font-semibold text-fg tracking-tight">
                   {reportData.kpis.no_shows}
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-gray-500">Ghair hazir tokens</span>
+                  <span className="text-xs text-fg-muted">Ghair hazir tokens</span>
                   <Link
                     href="/tokens?status=no_show"
-                    className="inline-flex items-center text-xs font-bold text-amber-600 hover:text-amber-700 gap-0.5"
+                    className="inline-flex items-center text-xs font-bold text-warning hover:text-warning gap-0.5"
                   >
                     View <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -325,20 +337,20 @@ export default function RozKiReportPage({
             </div>
 
             {/* Card 4: Online share */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md lg:col-span-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Online Share
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                <div className="w-8 h-8 rounded-lg bg-chart-3/10 flex items-center justify-center text-chart-3">
                   <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-3xl font-black text-gray-900 tracking-tight">
+                <div className="font-mono text-2xl font-semibold text-fg tracking-tight">
                   {reportData.kpis.online_share_pct} %
                 </div>
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-fg-muted mt-2">
                   {reportData.kpis.online_count} online · {reportData.kpis.walk_in_count} walk-in
                 </div>
               </div>
@@ -346,17 +358,17 @@ export default function RozKiReportPage({
           </div>
 
           {/* 7-Day Trend Chart Card (PRD §29.1 D-001) */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-gray-100">
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm sm:p-7">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-border">
               <div>
-                <h2 className="text-base font-bold text-gray-900">
+                <h2 className="text-base font-bold text-fg">
                   7 din ka chart
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-fg-muted">
                   Daily patients treated over the last 7 days
                 </p>
               </div>
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="text-xs text-fg-muted font-medium">
                 Peak: {maxSeen} patients
               </span>
             </div>
@@ -372,22 +384,22 @@ export default function RozKiReportPage({
                     key={item.date}
                     className="flex-1 flex flex-col items-center gap-2 h-full justify-end group"
                   >
-                    <span className="text-xs font-bold text-gray-700 opacity-90 group-hover:text-teal-700 transition-colors">
+                    <span className="text-xs font-bold text-fg opacity-90 group-hover:text-accent-hover transition-colors">
                       {item.patients_seen}
                     </span>
                     <div
                       style={{ height: `${heightPct}%` }}
-                      className={`w-full max-w-[48px] rounded-t-md transition-all duration-300 ${
+                      className={`w-full max-w-[48px] rounded-t-lg transition-all duration-300 ${
                         isSelected
-                          ? "bg-teal-600 shadow-md ring-2 ring-teal-400"
-                          : "bg-teal-500/80 hover:bg-teal-600"
+                          ? "bg-chart-1 shadow-md ring-2 ring-accent-border"
+                          : "bg-chart-2/80 hover:bg-chart-1"
                       }`}
                     />
-                    <div className="text-center pt-1 border-t border-gray-100 w-full">
-                      <div className="text-xs font-semibold text-gray-800">
+                    <div className="text-center pt-1 border-t border-border w-full">
+                      <div className="text-xs font-semibold text-fg">
                         {item.day_name}
                       </div>
-                      <div className="text-[10px] text-gray-500">
+                      <div className="text-[10px] text-fg-muted">
                         {item.date.slice(5)}
                       </div>
                     </div>
@@ -398,9 +410,9 @@ export default function RozKiReportPage({
           </div>
 
           {/* Export & Actions footer */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
-            <div className="text-xs text-gray-600">
-              <span className="font-semibold text-gray-800">Akhri update:</span> Auto-aggregated from daily OPD stats.
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface-sunken rounded-xl p-4 border border-border">
+            <div className="text-xs text-fg-muted">
+              <span className="font-semibold text-fg">Akhri update:</span> Auto-aggregated from daily OPD stats.
             </div>
             <Button
               variant="secondary"

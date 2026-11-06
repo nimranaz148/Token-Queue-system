@@ -123,8 +123,8 @@ async def revoke_display_device(
     status_code=status.HTTP_200_OK,
 )
 async def get_display_feed(
+    session: Annotated[AsyncSession, Depends(get_db)],
     authorization: Annotated[str | None, Header()] = None,
-    session: Annotated[AsyncSession, Depends(get_db)] = None,
 ) -> DisplayFeedResponse:
     """Retrieve live queue feed for paired TV screen. Token numbers only (PRD §5.3 F-009, Rule 10)."""
     if not authorization or not authorization.startswith("Bearer "):

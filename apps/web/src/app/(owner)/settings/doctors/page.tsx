@@ -6,6 +6,7 @@ import { LayoutShell } from "@/components/layout/layout-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Settings, Stethoscope, Tv, Users } from "lucide-react";
 
 const WEEKDAYS = [
   "Monday",
@@ -392,7 +393,20 @@ export default function DoctorManagementPage({
   ];
 
   return (
-    <LayoutShell userRole={userRole}>
+    <LayoutShell
+      userRole={userRole}
+      navItems={[
+        { label: "Clinic Settings", href: "/settings", icon: <Settings className="w-4 h-4" /> },
+        {
+          label: "Doctors",
+          href: "/settings/doctors",
+          icon: <Stethoscope className="w-4 h-4" />,
+          active: true,
+        },
+        { label: "Staff", href: "/settings/staff", icon: <Users className="w-4 h-4" /> },
+        { label: "TV Screens", href: "/settings/tv", icon: <Tv className="w-4 h-4" /> },
+      ]}
+    >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

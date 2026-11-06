@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.errors import forbidden
 from app.core.permissions import require_roles
 from app.schemas.ai import (
     AIActivityResponse,
@@ -100,6 +101,8 @@ async def get_daily_brief(
     brief_date: Annotated[dt.date | None, Query(alias="date")] = None,
 ) -> AIBriefRead:
     """Retrieve the daily brief for the owner's clinic on a specific date (F-018)."""
+    if not current_user.clinic_id:
+        raise forbidden(code="CLINIC_REQUIRED", detail="Clinic context required.")
     target_date = brief_date or dt.date.today()
     service = AIService(session)
     brief = await service.get_daily_brief(clinic_id=current_user.clinic_id, target_date=target_date)
@@ -117,6 +120,8 @@ async def generate_daily_brief(
     brief_date: Annotated[dt.date | None, Query(alias="date")] = None,
 ) -> AIBriefRead:
     """Generate or re-generate the daily brief for the owner's clinic (F-018)."""
+    if not current_user.clinic_id:
+        raise forbidden(code="CLINIC_REQUIRED", detail="Clinic context required.")
     target_date = brief_date or dt.date.today()
     service = AIService(session)
     brief = await service.generate_daily_brief(
@@ -139,6 +144,8 @@ async def submit_brief_feedback(
     session: Annotated[AsyncSession, Depends(get_db)],
 ) -> AIBriefRead:
     """Record owner thumbs up/down feedback for evaluation tracking (F-018)."""
+    if not current_user.clinic_id:
+        raise forbidden(code="CLINIC_REQUIRED", detail="Clinic context required.")
     service = AIService(session)
     brief = await service.submit_brief_feedback(
         clinic_id=current_user.clinic_id,

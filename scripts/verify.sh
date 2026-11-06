@@ -152,6 +152,7 @@ docker_up() { have docker && docker info > /dev/null 2>&1; }
 lane_web() {
   have npm || { echo "⚠ web: npm not installed — SKIPPED."; SKIPPED+=("web"); return 0; }
   [ -d node_modules ] || [ -d apps/web/node_modules ] || step "web: install" npm ci || return
+  step "web: UTF-8 source encoding" node scripts/check-web-source-utf8.mjs || return
   cd apps/web || return 1
   has_script() { node -e 'process.exit(require("./package.json").scripts?.[process.argv[1]] ? 0 : 1)' "$1"; }
   has_script lint && step "web: lint" npm run --silent lint

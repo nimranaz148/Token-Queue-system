@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ArrowRight, Check, Clock3, ShieldCheck, Stethoscope } from "lucide-react";
 
 interface DoctorSchedule {
   weekday: number;
@@ -51,10 +52,17 @@ export default function TokenBookingPage(): React.ReactElement {
     "1x0000000000000000000000000000000AA"
   );
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const formatLocalDate = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = formatLocalDate(new Date());
   const tomorrowDate = new Date();
   tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrowStr = tomorrowDate.toISOString().split("T")[0];
+  const tomorrowStr = formatLocalDate(tomorrowDate);
 
   useEffect(() => {
     if (!slug) return;
@@ -150,24 +158,52 @@ export default function TokenBookingPage(): React.ReactElement {
   const isBookingClosed = clinic && !clinic.online_booking_enabled;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-surface-sunken">
-      <div className="w-full max-w-[440px] bg-surface rounded-xl border border-border shadow-sm p-6 sm:p-8">
-        {/* Header */}
-        <div className="text-center pb-6 border-b border-border mb-6">
-          <span className="text-2xl mb-1 block" role="img" aria-label="clinic logo">
-            🏥
-          </span>
-          <h1 className="text-xl font-bold text-fg tracking-tight">
-            {clinic?.name || "Clinic Token Booking"}
-          </h1>
-          <p className="text-xs text-fg-muted mt-1">Online OPD Token Booking</p>
+    <main className="min-h-screen bg-canvas px-4 py-5 sm:px-6 sm:py-8 lg:px-10">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-8 flex items-center justify-between sm:mb-12">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent text-fg-inverse shadow-sm"><Stethoscope className="h-5 w-5" aria-hidden="true" /></div>
+            <div><p className="text-sm font-semibold tracking-tight text-fg">{clinic?.name || "Clinic Token Booking"}</p><p className="mt-0.5 text-2xs font-semibold uppercase tracking-[0.18em] text-fg-muted">OPD · online token</p></div>
+          </div>
+          <div className="hidden items-center gap-2 rounded-full border border-accent-border bg-surface px-3 py-1.5 text-xs font-medium text-accent sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-success" />Patient booking</div>
+        </header>
+        <div className="grid items-start gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <section className="pt-1 sm:pt-4" aria-label="How token booking works">
+          <div className="mb-5 inline-flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.2em] text-accent"><span className="h-px w-7 bg-accent" />Aasan clinic visit</div>
+          <h1 className="max-w-xl font-display text-4xl leading-[1.08] tracking-[-0.04em] text-fg sm:text-5xl lg:text-5xl">Apna token lein.<br /><span className="text-accent">Bari phone par dekhein.</span></h1>
+          <p className="mt-5 max-w-md text-sm leading-6 text-fg-muted sm:text-base sm:leading-7">Doctor aur din chunein, token book karein, aur clinic aane se pehle live queue ka haal jaan lein.</p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            {[
+              { number: "01", title: "Doctor chunein", detail: "Apni OPD select karein" },
+              { number: "02", title: "Token confirm karein", detail: "Apna number foran paayein" },
+              { number: "03", title: "Queue follow karein", detail: "Phone par live update dekhein" },
+            ].map((step) => (
+              <div key={step.number} className="flex items-center gap-3 rounded-lg border border-border bg-surface/70 p-3 sm:p-3.5">
+                <span className="font-mono text-2xs font-semibold tracking-widest text-accent">{step.number}</span>
+                <div className="min-w-0"><p className="text-xs font-semibold text-fg">{step.title}</p><p className="mt-0.5 text-2xs text-fg-muted">{step.detail}</p></div>
+                <Check className="ml-auto h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 hidden items-center gap-3 border-t border-border pt-5 text-xs text-fg-muted sm:flex"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-subtle text-accent"><Clock3 className="h-4 w-4" aria-hidden="true" /></div><span>Clinic aane se pehle apni bari ka andaza rakhein.</span><ArrowRight className="ml-auto h-4 w-4 text-accent" aria-hidden="true" /></div>
+        </section>
+          <section className="rounded-lg border border-border bg-surface p-5 shadow-lg sm:rounded-lg sm:p-8 lg:p-8" aria-labelledby="booking-title">
+        <div className="mb-6 flex items-start justify-between gap-4 border-b border-border pb-5">
+          <div>
+            <p className="text-2xs font-semibold uppercase tracking-[0.2em] text-accent">Aaj ya kal</p>
+            <h2 id="booking-title" className="mt-2 font-display text-3xl tracking-tight text-fg">Token book karein</h2>
+            <p className="mt-1 text-xs leading-5 text-fg-muted">Apni maloomat likhein — token link aap ko foran mil jayega.</p>
+          </div>
+          <div className="hidden h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent sm:flex">
+            <Stethoscope className="h-5 w-5" aria-hidden="true" />
+          </div>
         </div>
 
         {/* Booking closed banner */}
         {isBookingClosed && (
-          <div className="mb-6 p-4 rounded-lg bg-status-danger/10 border border-status-danger/20 text-center">
-            <p className="text-sm font-semibold text-status-danger">Booking Band Hai</p>
-            <p className="text-xs text-status-danger/80 mt-1">
+          <div className="mb-6 rounded-lg border border-danger-border bg-danger-subtle p-4 text-center">
+            <p className="text-sm font-semibold text-danger">Booking Band Hai</p>
+            <p className="text-xs text-danger mt-1">
               Online booking is currently disabled for this clinic.
             </p>
           </div>
@@ -175,7 +211,7 @@ export default function TokenBookingPage(): React.ReactElement {
 
         {/* Error message */}
         {error && (
-          <div className="mb-6 p-3 rounded-lg bg-status-danger/10 border border-status-danger/20 text-xs text-status-danger">
+          <div className="mb-6 rounded-lg border border-danger-border bg-danger-subtle p-3 text-xs text-danger">
             <p>{error}</p>
             {existingTokenUrl && (
               <Button
@@ -201,7 +237,7 @@ export default function TokenBookingPage(): React.ReactElement {
               <select
                 id="doctor-select"
                 aria-label="Doctor / OPD"
-                className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-border-focus"
                 value={doctorId}
                 onChange={(e) => setDoctorId(e.target.value)}
                 required
@@ -221,8 +257,8 @@ export default function TokenBookingPage(): React.ReactElement {
                 <label
                   className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-colors ${
                     visitDate === "today"
-                      ? "border-accent bg-accent/10 text-accent font-semibold"
-                      : "border-border bg-surface text-fg-muted hover:bg-surface-sunken"
+                      ? "border-accent bg-accent-subtle text-accent font-semibold"
+                      : "border-border bg-surface text-fg-muted hover:bg-surface-hover"
                   }`}
                 >
                   <input
@@ -238,8 +274,8 @@ export default function TokenBookingPage(): React.ReactElement {
                 <label
                   className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-colors ${
                     visitDate === "tomorrow"
-                      ? "border-accent bg-accent/10 text-accent font-semibold"
-                      : "border-border bg-surface text-fg-muted hover:bg-surface-sunken"
+                      ? "border-accent bg-accent-subtle text-accent font-semibold"
+                      : "border-border bg-surface text-fg-muted hover:bg-surface-hover"
                   }`}
                 >
                   <input
@@ -284,15 +320,15 @@ export default function TokenBookingPage(): React.ReactElement {
                 onChange={(e) => setPhone(e.target.value)}
                 required
               />
-              <span className="text-[11px] text-fg-muted">
-                SMS and queue updates will be sent to this number.
+              <span className="text-2xs text-fg-muted">
+                Queue updates will be available on your token link.
               </span>
             </div>
 
             {/* 5. Turnstile Security Note */}
-            <div className="p-2.5 rounded-md bg-surface-sunken border border-border flex items-center justify-between text-[11px] text-fg-muted">
+            <div className="p-2.5 rounded-md bg-surface-sunken border border-border flex items-center justify-between text-2xs text-fg-muted">
               <span>Cloudflare Turnstile Verified</span>
-              <span className="text-status-success font-semibold">✓ Protected</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-success"><ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />Protected</span>
             </div>
 
             {/* 6. Primary Action: TOKEN LO */}
@@ -306,6 +342,9 @@ export default function TokenBookingPage(): React.ReactElement {
             </Button>
           </form>
         )}
+        </section>
+        </div>
+        <footer className="mx-auto mt-8 max-w-6xl border-t border-border pt-4 text-center text-2xs text-fg-muted sm:mt-10">Online OPD token booking · Live queue updates on your token link.</footer>
       </div>
     </main>
   );

@@ -220,27 +220,28 @@ class AuthService:
                 )
 
             # 2. Check ClinicMember
-            member_stmt = select(ClinicMember).where(
-                ClinicMember.email == email,
-                ClinicMember.active.is_(True),
-                ClinicMember.deleted_at.is_(None),
-            )
-            if clinic_id:
-                member_stmt = member_stmt.where(ClinicMember.clinic_id == clinic_id)
-
-            member_res = await session.execute(member_stmt)
-            member = member_res.scalars().first()
-
-            if member:
-                return CurrentUser(
-                    user_id=member.user_id,
-                    email=member.email,
-                    name=member.name,
-                    role=member.role,
-                    clinic_id=member.clinic_id,
-                    doctor_id=member.doctor_id,
-                    is_platform_admin=False,
+            async with async_tenant_scope(None, bypass=True):
+                member_stmt = select(ClinicMember).where(
+                    ClinicMember.email == email,
+                    ClinicMember.active.is_(True),
+                    ClinicMember.deleted_at.is_(None),
                 )
+                if clinic_id:
+                    member_stmt = member_stmt.where(ClinicMember.clinic_id == clinic_id)
+
+                member_res = await session.execute(member_stmt)
+                member = member_res.scalars().first()
+
+                if member:
+                    return CurrentUser(
+                        user_id=member.user_id,
+                        email=member.email,
+                        name=member.name,
+                        role=member.role,
+                        clinic_id=member.clinic_id,
+                        doctor_id=member.doctor_id,
+                        is_platform_admin=False,
+                    )
         except Exception:
             if settings.environment not in {"development", "test"}:
                 raise
@@ -255,13 +256,14 @@ class AuthService:
                     role=Role.PLATFORM_ADMIN,
                     is_platform_admin=True,
                 )
+            _default_dev_clinic = uuid.UUID("c1111111-1111-1111-1111-111111111111")
             if email == "owner@example.com":
                 return CurrentUser(
                     user_id=uuid.uuid4(),
                     email=email,
                     name="Test Clinic Owner",
                     role=Role.OWNER,
-                    clinic_id=clinic_id or uuid.uuid4(),
+                    clinic_id=clinic_id or _default_dev_clinic,
                     is_platform_admin=False,
                 )
             if email == "doctor@example.com":
@@ -270,8 +272,8 @@ class AuthService:
                     email=email,
                     name="Test Doctor",
                     role=Role.DOCTOR,
-                    clinic_id=clinic_id or uuid.uuid4(),
-                    doctor_id=uuid.uuid4(),
+                    clinic_id=clinic_id or _default_dev_clinic,
+                    doctor_id=uuid.UUID("d1111111-1111-1111-1111-111111111111"),
                     is_platform_admin=False,
                 )
             if email == "reception@example.com":
@@ -280,7 +282,7 @@ class AuthService:
                     email=email,
                     name="Test Receptionist",
                     role=Role.RECEPTION,
-                    clinic_id=clinic_id or uuid.uuid4(),
+                    clinic_id=clinic_id or _default_dev_clinic,
                     is_platform_admin=False,
                 )
 

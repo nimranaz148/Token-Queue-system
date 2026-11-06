@@ -111,12 +111,12 @@ export function DailyBriefView() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="mx-auto w-full max-w-5xl space-y-7">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">Daily Brief</h1>
+            <h1 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">Daily Brief</h1>
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-accent/10 text-accent">
               F-018
             </span>
@@ -152,8 +152,8 @@ export function DailyBriefView() {
 
       {/* Error Banner */}
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2 text-red-500">
+        <div className="p-4 bg-danger-subtle border border-danger-border rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2 text-danger">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm font-medium">{error}</p>
           </div>
@@ -191,7 +191,7 @@ export function DailyBriefView() {
       ) : (
         <div className="space-y-6">
           {/* Main Brief Card */}
-          <div className="bg-surface-raised border border-border rounded-lg p-6 space-y-4 shadow-sm">
+          <div className="bg-surface border border-border rounded-lg p-6 space-y-5 shadow-sm sm:p-8">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-accent" />
@@ -203,7 +203,7 @@ export function DailyBriefView() {
             </div>
 
             {/* Markdown Body */}
-            <div className="prose prose-invert max-w-none text-sm text-fg leading-relaxed whitespace-pre-line">
+            <div className="max-w-none text-sm text-fg leading-relaxed whitespace-pre-line">
               {brief.body_md}
             </div>
 

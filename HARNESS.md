@@ -19,4 +19,5 @@ Two failures with the same shape should be impossible. If you see a second, the 
 
 | Date | What went wrong (one sentence) | Class | The fix, and the surface it went on |
 | --- | --- | --- | --- |
+| 2026-11-06 | Playwright found a CP1252 byte in a public route and a first-load API 401 before auth interception. | Verification | Fixed the source encoding and auth fetch timing; added a strict UTF-8 check to `scripts/verify.sh`, then rechecked the role routes with local demo sessions. |
 | | | | |

@@ -46,6 +46,7 @@ This document is the single source of truth for the scope of the Clinic Token & 
 | 0.2.0 | 2026-10-31 | Claude (prd skill) | Pakistan-only clinics (Q-001); staff login by email magic link (Q-002); clinic on/off settings for sharing visit advice with patients (new F-021, W-011) and for AI use of notes (Q-004) | 0.3, 0.4, 3.1, 3.2, 4, 5.2, 5.3, 10, 12.3, 13, 14, 22, 26, 27, 30, 34, 35, 36, App. A-C |
 | 0.2.1 | 2026-10-31 | Claude (prd skill) | Recorded the working development email setup (custom SMTP via Gmail app password, verified 2026-10-20); production sender still open | 0.4, 3.6, 13.3, 14, App. A-C |
 | 0.2.2 | 2026-10-31 | Claude (prd skill) | Owner decision: keep custom SMTP via Gmail app password; Q-007 closed; own-domain sender moved to §3.2 with a trigger | 0.4, 3.2, 3.6, App. A-B |
+| 0.2.3 | 2026-11-06 | Product owner | CR-001: document and redesign the public product overview on the existing `/` route; no clinic booking or staff workflows added | 25, 27, 29 |
 
 ### 0.3 Assumptions ledger
 | ID | Assumption | Basis | Owner to confirm |
@@ -814,7 +815,7 @@ Any feature, form, report, integration or workflow not in this PRD is handled by
 ### 25.1 Change request log
 | CR | Date | Requester | Summary | Sections | Decision | Approver |
 | --- | --- | --- | --- | --- | --- | --- |
-| — | — | — | None yet | — | — | — |
+| CR-001 | 2026-11-06 | Product owner | Redesign existing `/` route as public product overview; keep `/login` and clinic-specific `/c/{slug}` flows | 27, 29 | Approved | Product owner |
 
 ## 26. Initial Feature Priority
 | Priority | Meaning | Items |
@@ -837,6 +838,7 @@ Any feature, form, report, integration or workflow not in this PRD is handled by
 | Waiting room | F-009 | display_devices, tokens | `/display/*` |
 | Reports | F-010, D-001, R-001..R-005 | daily_stats | `/reports/*` |
 | AI | F-017, F-018, F-019, D-003 | ai_runs, ai_briefs, chat_messages, wait_predictions | `/ai/*`, `/public/tokens/{code}/chat`, `/visits/{id}/ai-summary` |
+| Product overview | CR-001 public homepage | — | `/` (public, no data API) |
 
 ## 28. Approval
 | Role | Name | Decision | Date |
@@ -845,6 +847,22 @@ Any feature, form, report, integration or workflow not in this PRD is handled by
 | Technical lead | (Q-006) | pending | |
 
 ## 29. Visual UI / UX Wireframes — Dashboards
+
+### 29.0 Public Product Homepage — CR-001
+
+Purpose: explain the documented clinic queue workflow to clinic owners and staff before they enter the staff portal. The page contains no clinic-specific data.
+
+```
+Product brand                         [Staff Login]
+Clinic ki line, ab sab ke liye saaf.
+Online tokens, aik queue, doctor ka NEXT, live updates.
+[Staff Portal Kholein]                [Sample queue preview]
+
+Patient booking | Reception queue | Doctor NEXT | TV + Owner report
+How it works: Book → Join shared queue → Doctor calls → Live update
+```
+
+The sample preview must be labeled as a demo. The patient booking CTA remains clinic-specific (`/c/{slug}`); the homepage must not add a clinic lookup or booking form.
 
 ### 29.1 D-001 Roz ki Report
 ```

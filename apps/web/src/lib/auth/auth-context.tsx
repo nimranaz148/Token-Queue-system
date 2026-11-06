@@ -13,6 +13,33 @@ export interface AuthUser {
   exp: number; // Unix timestamp in seconds
 }
 
+type AuthWindow = Window & { __clinicAuthFetchPatched?: boolean };
+
+if (typeof window !== "undefined" && !(window as AuthWindow).__clinicAuthFetchPatched) {
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async (input, init) => {
+    const activeToken = window.localStorage.getItem("auth_token");
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+
+    if (activeToken && url.includes("/api/v1")) {
+      const requestHeaders = input instanceof Request ? input.headers : undefined;
+      const headers = new Headers(init?.headers ?? requestHeaders);
+      if (!headers.has("Authorization")) {
+        headers.set("Authorization", `Bearer ${activeToken}`);
+      }
+      return originalFetch(input, { ...init, headers });
+    }
+
+    return originalFetch(input, init);
+  };
+  (window as AuthWindow).__clinicAuthFetchPatched = true;
+}
+
 export interface AuthContextType {
   user: AuthUser | null;
   role: Role | null;
@@ -23,7 +50,7 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function parseJwtPayload(token: string): AuthUser | null {
   try {

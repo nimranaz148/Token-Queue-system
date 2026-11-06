@@ -68,22 +68,23 @@ export function AICommandCenterView() {
   }, [fetchKpis]);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="w-full space-y-7 lg:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 rounded-2xl border border-border bg-surface px-5 py-6 shadow-sm sm:px-7">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">AI Command Center</h1>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-accent/10 text-accent">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Model operations</span>
+            <span className="inline-flex items-center rounded-full border border-accent-border px-2 py-0.5 text-xs font-mono font-medium text-accent">
               D-003
             </span>
           </div>
+          <h1 className="mt-2 font-display text-3xl font-medium tracking-tight sm:text-4xl">AI Command Center</h1>
           <p className="text-sm text-fg-muted mt-1">
             Clinic ke AI infrastructure ki live karkardagi (calls, reliability, fallback, cost, aur quality).
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button variant="secondary" onClick={fetchKpis} disabled={isLoading} className="gap-2">
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
@@ -99,7 +100,7 @@ export function AICommandCenterView() {
 
       {/* Error state */}
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center justify-between text-red-500">
+        <div className="p-4 bg-danger-subtle border border-danger-border rounded-lg flex items-center justify-between text-danger">
           <p className="text-sm font-medium">{error}</p>
           <Button variant="secondary" onClick={fetchKpis} className="text-xs h-8">
             Dobara Koshish
@@ -116,19 +117,20 @@ export function AICommandCenterView() {
       ) : data ? (
         <div className="space-y-6">
           {/* 5 KPI Cards Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-6 lg:grid-cols-12 lg:gap-4">
             {/* AI Calls */}
-            <div className="bg-surface-raised border border-border p-4 rounded-lg space-y-2 shadow-sm">
-              <div className="flex items-center justify-between text-fg-muted">
+            <div className="relative isolate overflow-hidden bg-accent border border-accent p-5 rounded-2xl space-y-3 text-fg-inverse shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg col-span-2 md:col-span-2 lg:col-span-4">
+              <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-14 h-48 w-48 rounded-full border border-fg-inverse/10" />
+              <div className="flex items-center justify-between text-fg-inverse/75">
                 <span className="text-xs font-medium">AI Calls</span>
-                <Bot className="w-4 h-4 text-accent" />
+                <Bot className="w-4 h-4" />
               </div>
-              <p className="text-2xl font-bold font-mono text-fg">{data.ai_calls}</p>
-              <p className="text-[11px] text-fg-muted">Kul inferences</p>
+              <p className="text-4xl font-semibold font-mono tracking-tight text-fg-inverse">{data.ai_calls}</p>
+              <p className="text-xs text-fg-inverse/75">Kul inferences</p>
             </div>
 
             {/* Failures */}
-            <div className="bg-surface-raised border border-border p-4 rounded-lg space-y-2 shadow-sm">
+            <div className="bg-danger-subtle border border-danger-border p-4 rounded-2xl space-y-2 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md md:col-span-2 lg:col-span-2">
               <div className="flex items-center justify-between text-fg-muted">
                 <span className="text-xs font-medium">Failures</span>
                 <AlertTriangle className="w-4 h-4 text-danger" />
@@ -138,7 +140,7 @@ export function AICommandCenterView() {
             </div>
 
             {/* Fallback Rate */}
-            <div className="bg-surface-raised border border-border p-4 rounded-lg space-y-2 shadow-sm">
+            <div className="bg-surface border border-border p-4 rounded-2xl space-y-2 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md md:col-span-2 lg:col-span-2">
               <div className="flex items-center justify-between text-fg-muted">
                 <span className="text-xs font-medium">Fallback Rate</span>
                 <Zap className="w-4 h-4 text-warning" />
@@ -150,7 +152,7 @@ export function AICommandCenterView() {
             </div>
 
             {/* Total Spend Cost */}
-            <div className="bg-surface-raised border border-border p-4 rounded-lg space-y-2 shadow-sm">
+            <div className="bg-surface border border-border p-4 rounded-2xl space-y-2 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md md:col-span-2 lg:col-span-2">
               <div className="flex items-center justify-between text-fg-muted">
                 <span className="text-xs font-medium">AI Spend (USD)</span>
                 <DollarSign className="w-4 h-4 text-success" />
@@ -162,7 +164,7 @@ export function AICommandCenterView() {
             </div>
 
             {/* Thumbs-down Rate */}
-            <div className="bg-surface-raised border border-border p-4 rounded-lg space-y-2 shadow-sm col-span-2 sm:col-span-1">
+            <div className="bg-warning-subtle border border-warning-border p-4 rounded-2xl space-y-2 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md col-span-2 md:col-span-2 lg:col-span-2">
               <div className="flex items-center justify-between text-fg-muted">
                 <span className="text-xs font-medium">Thumbs-down</span>
                 <ThumbsDown className="w-4 h-4 text-warning" />
@@ -175,7 +177,7 @@ export function AICommandCenterView() {
           </div>
 
           {/* Recent Runs Section */}
-          <div className="bg-surface-raised border border-border rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-accent" />

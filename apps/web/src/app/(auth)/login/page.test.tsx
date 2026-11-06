@@ -3,6 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import LoginPage from "./page";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 describe("LoginPage (F-012 Staff Login)", () => {
   it("renders Staff Login header and email input using FormShell", () => {
     render(<LoginPage />);

@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import not_found
@@ -19,6 +19,8 @@ from app.schemas.jobs import (
     DailyBriefJobResponse,
     DayCloseResponse,
     DoctorStatsSummary,
+    EstimatesJobResponse,
+    EstimatesJobResult,
 )
 from app.services.audit import AuditService
 
@@ -343,5 +345,76 @@ class JobsService:
             date=effective_date,
             clinics_processed=len(clinics),
             briefs_generated=briefs_count,
+            errors=errors,
+        )
+
+    async def run_estimates(
+        self,
+        clinic_id: uuid.UUID | None = None,
+        doctor_id: uuid.UUID | None = None,
+    ) -> EstimatesJobResponse:
+        """Execute automated or on-demand wait-time estimation background job.
+
+        Finds active waiting tokens (booked, arrived) and uses WaitPredictorAgent to
+        calculate and record predicted wait times.
+        """
+        from app.ai.agents.wait_predictor import WaitPredictorAgent
+        from app.services.ai_data import AIDataService
+
+        stmt = (
+            select(Token)
+            .where(Token.status.in_(["booked", "arrived"]))
+            .order_by(Token.clinic_id, Token.doctor_id, Token.visit_date, Token.position)
+        )
+        if clinic_id:
+            stmt = stmt.where(Token.clinic_id == clinic_id)
+        if doctor_id:
+            stmt = stmt.where(Token.doctor_id == doctor_id)
+
+        res = await self.session.execute(stmt)
+        waiting_tokens = list(res.scalars().all())
+
+        ai_data_service = AIDataService(self.session)
+        agent = WaitPredictorAgent(service=ai_data_service)
+
+        predictions: list[EstimatesJobResult] = []
+        errors: list[str] = []
+
+        for token in waiting_tokens:
+            try:
+                count_ahead_stmt = select(func.count(Token.id)).where(
+                    Token.clinic_id == token.clinic_id,
+                    Token.doctor_id == token.doctor_id,
+                    Token.visit_date == token.visit_date,
+                    Token.status.in_(["booked", "arrived"]),
+                    Token.position < token.position,
+                )
+                count_res = await self.session.execute(count_ahead_stmt)
+                people_ahead = count_res.scalar() or 0
+
+                pred = await agent.predict_and_save(
+                    token_id=token.id,
+                    clinic_id=token.clinic_id,
+                    doctor_id=token.doctor_id,
+                    people_ahead=people_ahead,
+                )
+                predictions.append(
+                    EstimatesJobResult(
+                        token_id=token.id,
+                        doctor_id=token.doctor_id,
+                        predicted_minutes=pred["predicted_minutes"],
+                        saved=pred["saved"],
+                    )
+                )
+            except Exception as exc:
+                logger.error("Error predicting wait time for token %s: %s", token.id, exc)
+                errors.append(f"Token {token.id}: {exc!s}")
+
+        await self.session.commit()
+
+        return EstimatesJobResponse(
+            success=len(errors) == 0,
+            tokens_processed=len(predictions),
+            predictions=predictions,
             errors=errors,
         )

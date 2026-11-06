@@ -80,3 +80,124 @@ After building any component, record: name, file path, purpose, variants, and th
 - **Features:** Persistent collapsible sidebar (240px expanded, 56px collapsed), 56px sticky topbar, responsive mobile drawer, 24px content padding.
 - **Token classes used:** `w-60`, `w-14`, `h-14`, `bg-surface`, `bg-canvas`, `border-border`, `overflow-x-hidden`.
 - **Do:** Ensure zero horizontal overflow across mobile (360px) and desktop (1440px).
+
+### Public Token Booking Layout
+
+File: `apps/web/src/app/(public)/c/[slug]/page.tsx`
+Last updated: 2026-11-05
+
+| Property | Class |
+| --- | --- |
+| Background | `bg-canvas`, `bg-surface` |
+| Border | `border-border`, `border-accent-border` |
+| Border radius | `rounded-lg` for panels and controls; `rounded-full` for status pills |
+| Text — primary | `text-fg`, `font-display` for the main heading |
+| Text — secondary | `text-fg-muted`, `text-2xs` |
+| Spacing | `p-5` to `p-9` in the form panel; `gap-7` between columns |
+| Hover state | `hover:bg-surface-hover` |
+| Shadow | `shadow-lg` on the form panel; `shadow-sm` on the clinic mark |
+| Accent usage | `bg-accent`, `text-accent`, `bg-accent-subtle` |
+
+**Pattern notes:** Keep the clinic identity and Roman Urdu explanation beside the existing booking form on wide screens; stack them above the form on phones. The explanatory queue steps are informational only. Keep the four existing booking fields and booking behavior intact.
+
+### Owner Report Dashboard
+
+File: `apps/web/src/app/(owner)/reports/page.tsx`
+Last updated: 2026-11-05
+
+| Property | Class |
+| --- | --- |
+| Background | `bg-canvas`, `bg-surface` |
+| Border | `border-border`, `border-border-strong` |
+| Border radius | `rounded-lg` |
+| Text — primary | `text-fg`, `font-display` for the page title |
+| Text — secondary | `text-fg-muted`, `text-fg-inverse/70` on the accent KPI |
+| Spacing | `p-5` for KPI cards; `p-5` to `p-7` for charts |
+| Hover state | `hover:-translate-y-0.5`, `hover:shadow-md` |
+| Shadow | `shadow-sm`, `shadow-md` on the lead KPI |
+| Accent usage | `bg-accent` for the lead KPI; `bg-chart-1` and `bg-chart-2` for the trend bars |
+
+**Pattern notes:** Keep the four PRD KPIs visible before the seven-day trend. The lead KPI may carry the accent surface; all other KPI cards stay neutral. The chart uses theme chart tokens.
+
+### Owner AI Dashboards
+
+Files: `apps/web/src/app/(owner)/daily-brief/page.tsx`, `apps/web/src/app/(owner)/ai/command-center/page.tsx`
+Last updated: 2026-11-05
+
+| Property | Class |
+| --- | --- |
+| Background | `bg-canvas`, `bg-surface` |
+| Border | `border-border`, `border-danger-border` for errors |
+| Border radius | `rounded-lg` |
+| Text — primary | `text-fg`, `font-display` for dashboard headings |
+| Text — secondary | `text-fg-muted`, `text-danger` for errors |
+| Spacing | `p-4` for KPI cards; `p-6` to `p-8` for brief content |
+| Hover state | `hover:-translate-y-0.5`, `hover:shadow-md` on metrics |
+| Shadow | `shadow-sm` |
+| Accent usage | `text-accent`, semantic `text-success`, `text-warning`, `text-danger` |
+
+**Pattern notes:** Keep AI spend and run outcomes readable as operational metrics. Use semantic status tokens and preserve the existing data, refresh and feedback actions.
+
+### Public Product Homepage
+
+File: `apps/web/src/app/page.tsx`
+Last updated: 2026-11-06
+
+| Property | Class |
+| --- | --- |
+| Background | `bg-canvas`, `bg-surface` |
+| Border | `border-border`, `border-accent-border` |
+| Border radius | `rounded-lg`, `rounded-md`, `rounded-full` |
+| Text — primary | `text-fg`, `font-display`, `text-display` |
+| Text — secondary | `text-fg-muted`, `text-2xs` |
+| Spacing | `px-5` to `px-10`; sections use `py-20` to `py-28` |
+| Hover state | `hover:-translate-y-0.5`, `hover:bg-accent-hover` |
+| Shadow | `shadow-sm`, `shadow-md`, `shadow-lg` |
+| Accent usage | `bg-accent`, `text-accent`, `bg-accent-subtle`, semantic `bg-success-subtle` |
+
+**Pattern notes:** Public home uses editorial display type, warm paper background, botanical teal and code-native product previews. Clearly label illustrative token numbers and dashboard metrics as samples. Keep the primary action pointed to `/login`; patient booking remains clinic-specific.
+
+### Doctor Consultation Dashboard
+
+File: `apps/web/src/app/(doctor)/doctor/page.tsx`
+Last updated: 2026-11-06
+
+| Property | Class |
+| --- | --- |
+| Background | `bg-canvas`, `bg-surface`, `bg-accent-subtle` for token number |
+| Border | `border-border`, `border-accent-border`, semantic status borders |
+| Border radius | `rounded-2xl` for active patient and queue panels; `rounded-xl` for controls |
+| Text - primary | `text-fg`, `font-display` for title, `font-mono` for token numbers |
+| Text - secondary | `text-fg-muted`, `text-accent` for active queue labels |
+| Spacing | `p-5` to `p-8` for active consultation; `p-3.5` for waiting patients |
+| Hover state | `hover:bg-surface-hover` for waiting patient rows |
+| Shadow | `shadow-sm`, `shadow-md` on the active consultation |
+| Accent usage | Queue counts use semantic status surfaces; NEXT stays the primary action |
+
+**Pattern notes:** Keep the active consultation and NEXT action visually dominant. Present current token, patient details, note field, then skip/hold actions. The next-in-line list and recall queue stay secondary. Preserve the F-007 role guard and queue actions.
+
+### Platform Overview Dashboard
+
+File: `apps/web/src/app/(admin)/admin/overview/page.tsx`
+Last updated: 2026-11-06
+
+| Property | Class |
+| --- | --- |
+| Background | `bg-canvas`, `bg-surface`, `bg-accent` for active-clinic KPI |
+| Border | `border-border`, semantic `border-warning-border` |
+| Border radius | `rounded-2xl` for dashboard panels; `rounded-lg` for controls |
+| Text - primary | `text-fg`, `font-display` for title, `font-mono` for metrics |
+| Text - secondary | `text-fg-muted`, `text-fg-inverse/75` on the lead KPI |
+| Spacing | Active-clinic KPI spans 4/12 columns; other metrics span 2/12 |
+| Hover state | `hover:bg-surface-hover` for clinic rows |
+| Shadow | `shadow-sm`, `shadow-md` on the lead KPI |
+| Accent usage | Active clinics use accent; idle clinics use warning; token metrics use chart/info colors |
+
+**Pattern notes:** Use active clinics as the network focal point, compact D-002 metrics beside it, and the clinic roster below. Preserve platform-wide scope, clinic status, search, refresh, and new-clinic action.
+
+### Dashboard Visual Pass
+
+Files: `apps/web/src/app/(owner)/reports/page.tsx`, `apps/web/src/app/(owner)/ai/command-center/page.tsx`
+Last updated: 2026-11-06
+
+The owner report gives patients seen the focal accent surface; supporting KPIs use restrained semantic surfaces and the seven-day chart uses theme chart tokens. The AI Command Center gives AI calls the focal panel, with failures, fallback, cost, and feedback in compact status tiles. Both keep existing filters, data, refresh, export, and report actions.
