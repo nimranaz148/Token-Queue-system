@@ -46,7 +46,7 @@ jobs:
           echo "Preview deployed at: $PREVIEW_URL"
 
       - name: Comment Preview URL on PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const previewUrl = "${{ steps.deploy.outputs.preview_url }}";
