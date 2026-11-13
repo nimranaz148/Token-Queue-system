@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for FastAPI backend
-FROM python:3.12-slim AS builder
+FROM python:3.15-slim AS builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY apps/api/pyproject.toml apps/api/uv.lock* ./
 
 RUN uv sync --frozen --no-dev --no-install-project
 
-FROM python:3.12-slim AS runner
+FROM python:3.15-slim AS runner
 
 WORKDIR /app
 
